@@ -2,8 +2,9 @@ package homework3
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type testData struct {
@@ -55,11 +56,23 @@ var data = []testData{
 		},
 		[]int{1, 2, 3, 6, 9, 8, 7, 4, 5},
 	},
+	{
+		[][]int{
+			{1, 2, 3},
+			{4, 5, 6, 9},
+			{7, 8, 9},
+		},
+		nil,
+	},
+	{
+		[][]int{},
+		nil,
+	},
 }
 
 func TestMain(t *testing.T) {
 	for _, d := range data {
-		output := flatten_matrix_clockwise(d.input)
+		output, _ := FlattenMatrixClockwise(d.input)
 		assert.Equal(t, d.expectedOutput, output, "input: "+fmt.Sprint(d.input))
 	}
 }

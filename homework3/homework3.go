@@ -1,11 +1,15 @@
 package homework3
 
-func flatten_matrix_clockwise(matrix [][]int) []int {
+import "errors"
+
+func FlattenMatrixClockwise(matrix [][]int) ([]int, error) {
+	if !isValidMatrix(matrix) {
+		return nil, errors.New("invalid matrix")
+	}
 	rowBottom := len(matrix)
 	colRight := len(matrix[0])
 	flat := make([]int, 0, rowBottom*colRight)
 	rowTop, colLeft := 0, 0
-
 	for rowTop < rowBottom && colLeft < colRight {
 		for i := colLeft; i < colRight; i++ {
 			flat = append(flat, matrix[rowTop][i])
@@ -28,5 +32,18 @@ func flatten_matrix_clockwise(matrix [][]int) []int {
 			colLeft += 1
 		}
 	}
-	return flat
+	return flat, nil
+}
+
+func isValidMatrix(matrix [][]int) bool {
+	if len(matrix) == 0 {
+		return false
+	}
+	firstRowLen := len(matrix[0])
+	for i := 1; i < len(matrix); i++ {
+		if len(matrix[i]) != firstRowLen {
+			return false
+		}
+	}
+	return true
 }
