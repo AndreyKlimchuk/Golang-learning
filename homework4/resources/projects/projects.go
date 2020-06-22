@@ -1,8 +1,11 @@
 package projects
 
 import (
+	pg "github.com/AndreyKlimchuk/golang-learning/homework4/postgres"
 	rsrc "github.com/AndreyKlimchuk/golang-learning/homework4/resources"
 )
+
+const defaultColumnName string = "default"
 
 type CreateRequest struct {
 	rsrc.ProjectSettableFields
@@ -26,21 +29,43 @@ type DeleteRequest struct {
 }
 
 func (r CreateRequest) Create() (rsrc.Project, error) {
-	return rsrc.Project{}, nil
+	tx, err := pg.Begin()
+	if err != nil {
+		return rsrc.Project{}, rsrc.NewInternalError("cannot begin transaction", err)
+	}
+	defer pg.Rollback(tx)
+	project, err := pg.QueryWithTX(tx).Projects().Create(r.Name, r.Description)
+	if err != nil {
+		return rsrc.Project{}, rsrc.NewInternalError("cannot create project", err)
+	}
+	rank := rsrc.CalculateRank("", "")
+	column, err := pg.QueryWithTX(tx).Columns().Create(project.Id, defaultColumnName, rank)
+	if err != nil {
+		return rsrc.Project{}, rsrc.NewInternalError("cannot create column", err)
+	}
+	project.Columns = []rsrc.Column{column}
+	if err := pg.Commit(tx); err != nil {
+		return rsrc.Project{}, rsrc.NewInternalError("cannot commit transaction", err)
+	}
+	return project, nil
 }
 
 func (r ReadRequest) Read() (rsrc.Project, error) {
-	return rsrc.Project{}, nil
+	project, err := pg.Query().Projects().Get(r.ProjectId, r.Expanded)
+	return project, rsrc.MaybeNewNotFoundOrInternalError("cannot get project", err)
 }
 
-func (r ReadCollectionRequest) ReadCollection() ([]rsrc.Project, error) {
-	return []rsrc.Project{}, nil
+func (_ ReadCollectionRequest) ReadCollection() ([]rsrc.Project, error) {
+	project, err := pg.Query().Projects().GetMultiple()
+	return project, rsrc.MaybeNewInternalError("cannot get projects", err)
 }
 
 func (r UpdateRequest) Update() error {
-	return nil
+	err := pg.Query().Projects().Update(r.ProjectId, r.Name, r.Description)
+	return rsrc.MaybeNewNotFoundOrInternalError("cannot update project", err)
 }
 
 func (r DeleteRequest) Delete() error {
-	return nil
+	err := pg.Query().Projects().Delete(r.ProjectId)
+	return rsrc.MaybeNewNotFoundOrInternalError("cannot delete project", err)
 }

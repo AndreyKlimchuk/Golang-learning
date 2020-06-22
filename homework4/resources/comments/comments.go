@@ -33,7 +33,7 @@ type DeleteRequest struct {
 }
 
 func (r CreateRequest) Create() (rsrc.Comment, error) {
-	_, err := pg.Query().Tasks().Get(r.TaskId)
+	_, err := pg.Query().Tasks().Get(r.TaskId, false)
 	if err != nil {
 		return rsrc.Comment{}, rsrc.NewNotFoundOrInternalError("cannot get task", err)
 	}
@@ -42,12 +42,12 @@ func (r CreateRequest) Create() (rsrc.Comment, error) {
 }
 
 func (r ReadRequest) Read() (rsrc.Comment, error) {
-	comment, err := pg.Query().Comments().Read(r.TaskId, r.CommentId)
+	comment, err := pg.Query().Comments().Get(r.TaskId, r.CommentId)
 	return comment, rsrc.MaybeNewNotFoundOrInternalError("cannot get comment", err)
 }
 
 func (r ReadCollectionRequest) ReadCollection() ([]rsrc.Comment, error) {
-	comments, err := pg.Query().Comments().ReadMultiple(r.TaskId)
+	comments, err := pg.Query().Comments().GetMultiple(r.TaskId)
 	return comments, rsrc.MaybeNewInternalError("cannot read comments", err)
 }
 

@@ -2,7 +2,6 @@ package columns
 
 import (
 	rsrc "github.com/AndreyKlimchuk/golang-learning/homework4/resources"
-	c "github.com/AndreyKlimchuk/golang-learning/homework4/resources/columns"
 )
 
 type Query struct {
@@ -62,14 +61,14 @@ func (q Query) GetAndBlockSuccessorColumnId(projectId rsrc.Id, r rsrc.Rank) (rsr
 	return 0, nil
 }
 
-func (q Query) GetAndBlockNeighborRanks(r c.UpdatePositionRequest) ([2]rsrc.Rank, error) {
-	return [2]rsrc.Rank{"", ""}, nil
-}
-
 func (q Query) UpdateRank(projectId, columnId rsrc.Id, rank rsrc.Rank) error {
 	return nil
 }
 
 func (q Query) GetNextRank(projectId rsrc.Id, rank rsrc.Rank) (rsrc.Rank, error) {
+	return "", nil
+}
 
+func (q Query) GetByName(projectId rsrc.Id, name string) (rsrc.Column, error) {
+	return rsrc.Column{}, nil
 }

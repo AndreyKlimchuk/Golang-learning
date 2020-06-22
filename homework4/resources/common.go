@@ -46,6 +46,37 @@ type CommentSettableFields struct {
 	Text string `json:"text" validate:"min=1,max=5000"`
 }
 
+//func GenericUpdatePosition(r UpdatePositionRequest) error {
+//	tx, err := pg.Begin()
+//	if err != nil {
+//		return rsrc.NewInternalError("cannot begin transaction", err)
+//	}
+//	defer pg.Rollback(tx)
+//	var prevRank rsrc.Rank = ""
+//	if r.AfterTargetId() > 0 {
+//		prevRank, err = r.GetAndBlockPrevRank(tx)
+//		if pg.IsNoRowsError(err) {
+//			return rsrc.NewConflictError("after target doesn't exist")
+//		} else if err != nil {
+//			return rsrc.NewInternalError("cannot get previous task rank", err)
+//		}
+//	}
+//	nextRank, err := r.GetNextRank(tx, prevRank)
+//	if pg.IsNoRowsError(err) {
+//		nextRank = ""
+//	} else if err != nil {
+//		return rsrc.NewInternalError("cannot get next task rank", err)
+//	}
+//	newRank := rsrc.CalculateRank(prevRank, nextRank)
+//	err = r.UpdatePositionFinal(tx, newRank)
+//	if err != nil {
+//		return rsrc.NewNotFoundOrInternalError("cannot update position", err)
+//	}
+//	if err := pg.Commit(tx); err != nil {
+//		return rsrc.NewInternalError("cannot commit transaction", err)
+//	}
+//}
+
 // naive implementation of lexicographic ranking algorithm
 func CalculateRank(rankA Rank, rankB Rank) Rank {
 	var smaller, bigger Rank

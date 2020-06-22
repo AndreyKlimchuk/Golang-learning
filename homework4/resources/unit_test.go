@@ -8,7 +8,7 @@ import (
 
 const letters = "abcdefghijklmnopqrstuvwxyz"
 
-func Test_calculateRank(t *testing.T) {
+func Test_CalculateRank(t *testing.T) {
 	if initRank := CalculateRank("", ""); !isValidRank(initRank) {
 		t.Errorf("Ivalid initial rank %v", initRank)
 	}

@@ -10,11 +10,11 @@ func (q Query) Create(taskId rsrc.Id, text string) (rsrc.Comment, error) {
 	return rsrc.Comment{}, nil
 }
 
-func (q Query) Read(taskId, commentId rsrc.Id) (rsrc.Comment, error) {
+func (q Query) Get(taskId, commentId rsrc.Id) (rsrc.Comment, error) {
 	return rsrc.Comment{}, nil
 }
 
-func (q Query) ReadMultiple(taskId rsrc.Id) ([]rsrc.Comment, error) {
+func (q Query) GetMultiple(taskId rsrc.Id) ([]rsrc.Comment, error) {
 	return []rsrc.Comment{}, nil
 }
 

@@ -37,6 +37,12 @@ type DeleteRequest struct {
 }
 
 func (r CreateRequest) Create() (rsrc.Column, error) {
+	column, err := pg.Query().Columns().GetByName(r.ProjectId, r.Name)
+	if err == nil {
+		return rsrc.Column{}, rsrc.NewConflictError("column with same name exists in project")
+	} else if !pg.IsNoRowsError(err) {
+		return rsrc.Column{}, rsrc.NewInternalError("cannot get column by name", err)
+	}
 	tx, err := pg.Begin()
 	if err != nil {
 		return rsrc.Column{}, rsrc.NewInternalError("cannot begin transaction", err)
@@ -47,7 +53,7 @@ func (r CreateRequest) Create() (rsrc.Column, error) {
 		return rsrc.Column{}, rsrc.NewNotFoundOrInternalError("cannot get max rank", err)
 	}
 	maxRank = rsrc.CalculateRank(maxRank, "")
-	column, err := pg.QueryWithTX(tx).Columns().Create(r.ProjectId, r.Name, maxRank)
+	column, err = pg.QueryWithTX(tx).Columns().Create(r.ProjectId, r.Name, maxRank)
 	if err != nil {
 		return rsrc.Column{}, rsrc.NewInternalError("cannot create column", err)
 	}
@@ -68,7 +74,13 @@ func (r ReadCollectionRequest) ReadCollection() ([]rsrc.Column, error) {
 }
 
 func (r UpdateRequest) Update() error {
-	err := pg.Query().Columns().Update(r.ProjectId, r.ColumnId, r.Name)
+	column, err := pg.Query().Columns().GetByName(r.ProjectId, r.Name)
+	if err == nil && column.Id == r.ColumnId {
+		return rsrc.NewConflictError("column with specified name already exists in project")
+	} else if err != nil && !pg.IsNoRowsError(err) {
+		return rsrc.NewInternalError("cannot get column by name", err)
+	}
+	err = pg.Query().Columns().Update(r.ProjectId, r.ColumnId, r.Name)
 	return rsrc.MaybeNewNotFoundOrInternalError("cannot update column", err)
 }
 
@@ -140,8 +152,7 @@ func (r UpdatePositionRequest) UpdatePosition() error {
 	nextRank, err := pg.QueryWithTX(tx).Columns().GetNextRank(r.ProjectId, prevRank)
 	if pg.IsNoRowsError(err) {
 		nextRank = ""
-	}
-	if err != nil {
+	} else if err != nil {
 		return rsrc.NewInternalError("cannot get next column rank", err)
 	}
 	newRank := rsrc.CalculateRank(prevRank, nextRank)

@@ -1,8 +1,9 @@
 package resources
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
-	"github.com/AndreyKlimchuk/golang-learning/homework4/postgres"
 )
 
 type ErrorType int
@@ -58,7 +59,7 @@ func MaybeNewNotFoundOrInternalError(description string, err error) error {
 }
 
 func NewNotFoundOrInternalError(description string, err error) error {
-	if postgres.IsNoRowsError(err) {
+	if errors.Is(err, sql.ErrNoRows) {
 		return NewNotFountError()
 	} else {
 		return NewInternalError(description, err)
