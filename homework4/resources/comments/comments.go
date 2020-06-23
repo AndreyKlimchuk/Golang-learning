@@ -6,7 +6,7 @@ import (
 )
 
 type CreateRequest struct {
-	TaskId    rsrc.Id
+	TaskId rsrc.Id
 	rsrc.CommentSettableFields
 }
 
@@ -16,7 +16,7 @@ type ReadRequest struct {
 }
 
 type ReadCollectionRequest struct {
-	TaskId    rsrc.Id
+	TaskId rsrc.Id
 }
 
 type UpdateRequest struct {
@@ -32,7 +32,7 @@ type DeleteRequest struct {
 	CommentId rsrc.Id
 }
 
-func (r CreateRequest) Create() (rsrc.Comment, error) {
+func (r CreateRequest) Handle() (interface{}, error) {
 	_, err := pg.Query().Tasks().Get(r.TaskId, false)
 	if err != nil {
 		return rsrc.Comment{}, rsrc.NewNotFoundOrInternalError("cannot get task", err)
@@ -41,22 +41,22 @@ func (r CreateRequest) Create() (rsrc.Comment, error) {
 	return comment, rsrc.MaybeNewInternalError("cannot create comment", err)
 }
 
-func (r ReadRequest) Read() (rsrc.Comment, error) {
+func (r ReadRequest) Handle() (interface{}, error) {
 	comment, err := pg.Query().Comments().Get(r.TaskId, r.CommentId)
 	return comment, rsrc.MaybeNewNotFoundOrInternalError("cannot get comment", err)
 }
 
-func (r ReadCollectionRequest) ReadCollection() ([]rsrc.Comment, error) {
+func (r ReadCollectionRequest) Handle() (interface{}, error) {
 	comments, err := pg.Query().Comments().GetMultiple(r.TaskId)
 	return comments, rsrc.MaybeNewInternalError("cannot read comments", err)
 }
 
-func (r UpdateRequest) Update() error {
+func (r UpdateRequest) Handle() (interface{}, error) {
 	err := pg.Query().Comments().Update(r.TaskId, r.CommentId, r.Text)
-	return rsrc.MaybeNewNotFoundOrInternalError("cannot update comment", err)
+	return nil, rsrc.MaybeNewNotFoundOrInternalError("cannot update comment", err)
 }
 
-func (r DeleteRequest) Delete() error {
+func (r DeleteRequest) Handle() (interface{}, error) {
 	err := pg.Query().Comments().Delete(r.TaskId, r.CommentId)
-	return rsrc.MaybeNewNotFoundOrInternalError("cannot delete comment", err)
+	return nil, rsrc.MaybeNewNotFoundOrInternalError("cannot delete comment", err)
 }

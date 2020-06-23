@@ -28,7 +28,7 @@ type DeleteRequest struct {
 	ProjectId rsrc.Id
 }
 
-func (r CreateRequest) Create() (rsrc.Project, error) {
+func (r CreateRequest) Handle() (interface{}, error) {
 	tx, err := pg.Begin()
 	if err != nil {
 		return rsrc.Project{}, rsrc.NewInternalError("cannot begin transaction", err)
@@ -50,22 +50,22 @@ func (r CreateRequest) Create() (rsrc.Project, error) {
 	return project, nil
 }
 
-func (r ReadRequest) Read() (rsrc.Project, error) {
+func (r ReadRequest) Handle() (interface{}, error) {
 	project, err := pg.Query().Projects().Get(r.ProjectId, r.Expanded)
 	return project, rsrc.MaybeNewNotFoundOrInternalError("cannot get project", err)
 }
 
-func (_ ReadCollectionRequest) ReadCollection() ([]rsrc.Project, error) {
+func (_ ReadCollectionRequest) Handle() (interface{}, error) {
 	project, err := pg.Query().Projects().GetMultiple()
 	return project, rsrc.MaybeNewInternalError("cannot get projects", err)
 }
 
-func (r UpdateRequest) Update() error {
+func (r UpdateRequest) Handle() (interface{}, error) {
 	err := pg.Query().Projects().Update(r.ProjectId, r.Name, r.Description)
-	return rsrc.MaybeNewNotFoundOrInternalError("cannot update project", err)
+	return nil, rsrc.MaybeNewNotFoundOrInternalError("cannot update project", err)
 }
 
-func (r DeleteRequest) Delete() error {
+func (r DeleteRequest) Handle() (interface{}, error) {
 	err := pg.Query().Projects().Delete(r.ProjectId)
-	return rsrc.MaybeNewNotFoundOrInternalError("cannot delete project", err)
+	return nil, rsrc.MaybeNewNotFoundOrInternalError("cannot delete project", err)
 }

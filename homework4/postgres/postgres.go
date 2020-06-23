@@ -3,6 +3,7 @@ package postgres
 import (
 	"database/sql"
 	"errors"
+
 	"github.com/AndreyKlimchuk/golang-learning/homework4/postgres/columns"
 	"github.com/AndreyKlimchuk/golang-learning/homework4/postgres/comments"
 	"github.com/AndreyKlimchuk/golang-learning/homework4/postgres/projects"
@@ -47,7 +48,7 @@ func Commit(tx TX) error {
 	return nil
 }
 
-func Rollback(tx TX)  {
+func Rollback(tx TX) {
 	return
 }
 

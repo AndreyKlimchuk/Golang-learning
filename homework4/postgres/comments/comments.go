@@ -3,7 +3,6 @@ package comments
 import rsrc "github.com/AndreyKlimchuk/golang-learning/homework4/resources"
 
 type Query struct {
-
 }
 
 func (q Query) Create(taskId rsrc.Id, text string) (rsrc.Comment, error) {

@@ -25,11 +25,11 @@ type ColumnSettableFields struct {
 }
 
 type Task struct {
-	ProjectId Id        `json:"project_id"`
-	ColumnId  Id        `json:"column_id"`
-	Id        Id        `json:"id"`
+	ProjectId Id `json:"project_id"`
+	ColumnId  Id `json:"column_id"`
+	Id        Id `json:"id"`
 	TaskSettableFields
-	Comments  []Comment `json:"comments,omitempty"`
+	Comments []Comment `json:"comments,omitempty"`
 }
 
 type TaskSettableFields struct {
@@ -44,6 +44,30 @@ type Comment struct {
 
 type CommentSettableFields struct {
 	Text string `json:"text" validate:"min=1,max=5000"`
+}
+
+type Request interface {
+	Handle() (interface{}, error)
+}
+
+type Resource interface {
+	GetId() Id
+}
+
+func (resource Project) GetId() Id {
+	return resource.Id
+}
+
+func (resource Column) GetId() Id {
+	return resource.Id
+}
+
+func (resource Task) GetId() Id {
+	return resource.Id
+}
+
+func (resource Comment) GetId() Id {
+	return resource.Id
 }
 
 //func GenericUpdatePosition(r UpdatePositionRequest) error {

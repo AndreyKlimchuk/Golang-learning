@@ -6,36 +6,32 @@ import (
 )
 
 type CreateRequest struct {
-	ProjectId rsrc.Id
-	ColumnId  rsrc.Id
+	ProjectId rsrc.Id `json:"-"`
+	ColumnId  rsrc.Id `json:"-"`
 	rsrc.TaskSettableFields
 }
 
 type ReadRequest struct {
-	ProjectId rsrc.Id
-	ColumnId  rsrc.Id
-	TaskId    rsrc.Id
-	Expanded  bool
+	TaskId   rsrc.Id `json:"-"`
+	Expanded bool    `json:"-"`
 }
 
 type UpdateRequest struct {
-	TaskId rsrc.Id
+	TaskId rsrc.Id `json:"-"`
 	rsrc.TaskSettableFields
 }
 
 type DeleteRequest struct {
-	ProjectId rsrc.Id
-	ColumnId  rsrc.Id
-	TaskId    rsrc.Id
+	TaskId rsrc.Id `json:"-"`
 }
 
 type UpdatePositionRequest struct {
-	TaskId      rsrc.Id
-	NewColumnId rsrc.Id
-	AfterTaskId rsrc.Id
+	TaskId      rsrc.Id `json:"-"`
+	NewColumnId rsrc.Id `json:"new_column_id"`
+	AfterTaskId rsrc.Id `json:"after_task_id"`
 }
 
-func (r CreateRequest) Create() (rsrc.Task, error) {
+func (r CreateRequest) Handle() (interface{}, error) {
 	if _, err := pg.Query().Columns().Get(r.ProjectId, r.ColumnId); err != nil {
 		return rsrc.Task{}, rsrc.NewNotFoundOrInternalError("cannot get column", err)
 	}
@@ -60,53 +56,53 @@ func (r CreateRequest) Create() (rsrc.Task, error) {
 	return task, nil
 }
 
-func (r ReadRequest) Read() (rsrc.Task, error) {
+func (r ReadRequest) Handle() (interface{}, error) {
 	task, err := pg.Query().Tasks().Get(r.TaskId, r.Expanded)
 	return task, rsrc.MaybeNewNotFoundOrInternalError("cannot read task", err)
 }
 
-func (r UpdateRequest) Update() error {
+func (r UpdateRequest) Handle() (interface{}, error) {
 	err := pg.Query().Tasks().Update(r.TaskId, r.Name, r.Description)
-	return rsrc.MaybeNewNotFoundOrInternalError("cannot update task", err)
+	return nil, rsrc.MaybeNewNotFoundOrInternalError("cannot update task", err)
 }
 
-func (r DeleteRequest) Delete() error {
+func (r DeleteRequest) Handle() (interface{}, error) {
 	err := pg.Query().Tasks().Delete(r.TaskId)
-	return rsrc.MaybeNewNotFoundOrInternalError("cannot delete task", err)
+	return nil, rsrc.MaybeNewNotFoundOrInternalError("cannot delete task", err)
 }
 
-func (r UpdatePositionRequest) UpdatePosition() error {
+func (r UpdatePositionRequest) Handle() (interface{}, error) {
 	if err := validatePositionUpdate(r); err != nil {
-		return err
+		return nil, err
 	}
 	tx, err := pg.Begin()
 	if err != nil {
-		return rsrc.NewInternalError("cannot begin transaction", err)
+		return nil, rsrc.NewInternalError("cannot begin transaction", err)
 	}
 	defer pg.Rollback(tx)
 	var prevRank rsrc.Rank = ""
 	if r.AfterTaskId > 0 {
 		prevRank, err = pg.QueryWithTX(tx).Tasks().GetAndBlockRank(r.NewColumnId, r.AfterTaskId)
 		if pg.IsNoRowsError(err) {
-			return rsrc.NewConflictError("task specified by after_task_id not found in target column")
+			return nil, rsrc.NewConflictError("task specified by after_task_id not found in target column")
 		} else if err != nil {
-			return rsrc.NewInternalError("cannot get previous task rank", err)
+			return nil, rsrc.NewInternalError("cannot get previous task rank", err)
 		}
 	}
 	nextRank, err := pg.QueryWithTX(tx).Tasks().GetNextRank(r.NewColumnId, prevRank)
 	if pg.IsNoRowsError(err) {
 		nextRank = ""
 	} else if err != nil {
-		return rsrc.NewInternalError("cannot get next task rank", err)
+		return nil, rsrc.NewInternalError("cannot get next task rank", err)
 	}
 	newRank := rsrc.CalculateRank(prevRank, nextRank)
 	if err := pg.QueryWithTX(tx).Tasks().UpdatePosition(r.TaskId, r.NewColumnId, newRank); err != nil {
-		return rsrc.NewNotFoundOrInternalError("cannot update task position", err)
+		return nil, rsrc.NewNotFoundOrInternalError("cannot update task position", err)
 	}
 	if err := pg.Commit(tx); err != nil {
-		return rsrc.NewInternalError("cannot commit transaction", err)
+		return nil, rsrc.NewInternalError("cannot commit transaction", err)
 	}
-	return nil
+	return nil, nil
 }
 
 func validatePositionUpdate(r UpdatePositionRequest) error {

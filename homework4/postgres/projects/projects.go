@@ -3,7 +3,6 @@ package projects
 import rsrc "github.com/AndreyKlimchuk/golang-learning/homework4/resources"
 
 type Query struct {
-
 }
 
 func (q Query) Create(name string, description string) (rsrc.Project, error) {
