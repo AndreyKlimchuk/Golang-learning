@@ -49,7 +49,7 @@ func Commit(tx TX) error {
 }
 
 func Rollback(tx TX) {
-	return
+
 }
 
 func IsNoRowsError(err error) bool {

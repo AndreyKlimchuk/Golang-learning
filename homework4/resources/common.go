@@ -4,9 +4,13 @@ type Id int
 type Rank string
 
 type Project struct {
-	Id      Id       `json:"id"`
-	Columns []Column `json:"columns,omitempty"`
+	Id Id `json:"id"`
 	ProjectSettableFields
+}
+
+type ProjectExpanded struct {
+	Project
+	Columns []ColumnExpanded `json:"columns"`
 }
 
 type ProjectSettableFields struct {
@@ -15,9 +19,13 @@ type ProjectSettableFields struct {
 }
 
 type Column struct {
-	Id    Id     `json:"id"`
-	Tasks []Task `json:"tasks,omitempty"`
+	Id Id `json:"id"`
 	ColumnSettableFields
+}
+
+type ColumnExpanded struct {
+	Column
+	Tasks []TaskExpanded `json:"tasks"`
 }
 
 type ColumnSettableFields struct {
@@ -29,7 +37,11 @@ type Task struct {
 	ColumnId  Id `json:"column_id"`
 	Id        Id `json:"id"`
 	TaskSettableFields
-	Comments []Comment `json:"comments,omitempty"`
+}
+
+type TaskExpanded struct {
+	Task
+	Comments []Comment `json:"comments"`
 }
 
 type TaskSettableFields struct {
@@ -58,11 +70,23 @@ func (resource Project) GetId() Id {
 	return resource.Id
 }
 
+func (resource ProjectExpanded) GetId() Id {
+	return resource.Id
+}
+
 func (resource Column) GetId() Id {
 	return resource.Id
 }
 
+func (resource ColumnExpanded) GetId() Id {
+	return resource.Id
+}
+
 func (resource Task) GetId() Id {
+	return resource.Id
+}
+
+func (resource TaskExpanded) GetId() Id {
 	return resource.Id
 }
 

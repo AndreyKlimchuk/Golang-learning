@@ -6,27 +6,27 @@ import (
 )
 
 type CreateRequest struct {
-	ProjectId rsrc.Id `json:"-"`
-	ColumnId  rsrc.Id `json:"-"`
+	ProjectId rsrc.Id
+	ColumnId  rsrc.Id
 	rsrc.TaskSettableFields
 }
 
 type ReadRequest struct {
-	TaskId   rsrc.Id `json:"-"`
-	Expanded bool    `json:"-"`
+	TaskId   rsrc.Id
+	Expanded bool
 }
 
 type UpdateRequest struct {
-	TaskId rsrc.Id `json:"-"`
+	TaskId rsrc.Id
 	rsrc.TaskSettableFields
 }
 
 type DeleteRequest struct {
-	TaskId rsrc.Id `json:"-"`
+	TaskId rsrc.Id
 }
 
 type UpdatePositionRequest struct {
-	TaskId      rsrc.Id `json:"-"`
+	TaskId      rsrc.Id `swaggerignore:"true"`
 	NewColumnId rsrc.Id `json:"new_column_id"`
 	AfterTaskId rsrc.Id `json:"after_task_id"`
 }
@@ -57,7 +57,13 @@ func (r CreateRequest) Handle() (interface{}, error) {
 }
 
 func (r ReadRequest) Handle() (interface{}, error) {
-	task, err := pg.Query().Tasks().Get(r.TaskId, r.Expanded)
+	var task rsrc.Resource
+	var err error
+	if r.Expanded {
+		task, err = pg.Query().Tasks().GetExpanded(r.TaskId)
+	} else {
+		task, err = pg.Query().Tasks().Get(r.TaskId)
+	}
 	return task, rsrc.MaybeNewNotFoundOrInternalError("cannot read task", err)
 }
 
@@ -106,7 +112,7 @@ func (r UpdatePositionRequest) Handle() (interface{}, error) {
 }
 
 func validatePositionUpdate(r UpdatePositionRequest) error {
-	task, err := pg.Query().Tasks().Get(r.TaskId, false)
+	task, err := pg.Query().Tasks().Get(r.TaskId)
 	if err != nil {
 		return rsrc.NewNotFoundOrInternalError("cannot get task", err)
 	}

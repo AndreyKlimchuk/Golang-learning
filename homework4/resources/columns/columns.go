@@ -1,4 +1,4 @@
-package comments
+package columns
 
 import (
 	pg "github.com/AndreyKlimchuk/golang-learning/homework4/postgres"
@@ -26,8 +26,8 @@ type UpdateRequest struct {
 }
 
 type UpdatePositionRequest struct {
-	ProjectId     rsrc.Id
-	ColumnId      rsrc.Id
+	ProjectId     rsrc.Id `swaggerignore:"true"`
+	ColumnId      rsrc.Id `swaggerignore:"true"`
 	AfterColumnId rsrc.Id
 }
 
@@ -78,7 +78,7 @@ func (r UpdateRequest) Handle() (interface{}, error) {
 	if err == nil && column.Id == r.ColumnId {
 		return nil, rsrc.NewConflictError("column with specified name already exists in project")
 	} else if err != nil && !pg.IsNoRowsError(err) {
-		return rsrc.NewInternalError("cannot get column by name", err)
+		return nil, rsrc.NewInternalError("cannot get column by name", err)
 	}
 	err = pg.Query().Columns().Update(r.ProjectId, r.ColumnId, r.Name)
 	return nil, rsrc.MaybeNewNotFoundOrInternalError("cannot update column", err)

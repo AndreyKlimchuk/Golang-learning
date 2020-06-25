@@ -19,12 +19,12 @@ func (q Query) UpdatePosition(taskId, columnId rsrc.Id, rank rsrc.Rank) error {
 	return nil
 }
 
-func (q Query) Get(taskId rsrc.Id, expanded bool) (rsrc.Task, error) {
+func (q Query) Get(taskId rsrc.Id) (rsrc.Task, error) {
 	return rsrc.Task{}, nil
 }
 
-func (q Query) GetExpanded(taskId rsrc.Id) (rsrc.Task, error) {
-	return rsrc.Task{}, nil
+func (q Query) GetExpanded(taskId rsrc.Id) (rsrc.TaskExpanded, error) {
+	return rsrc.TaskExpanded{}, nil
 }
 
 func (q Query) Create(projectId, columnId rsrc.Id, name string, description string, rank rsrc.Rank) (rsrc.Task, error) {

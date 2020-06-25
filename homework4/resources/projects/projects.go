@@ -43,7 +43,7 @@ func (r CreateRequest) Handle() (interface{}, error) {
 	if err != nil {
 		return rsrc.Project{}, rsrc.NewInternalError("cannot create column", err)
 	}
-	project.Columns = []rsrc.Column{column}
+	project.Columns = []rsrc.ColumnExpanded{column}
 	if err := pg.Commit(tx); err != nil {
 		return rsrc.Project{}, rsrc.NewInternalError("cannot commit transaction", err)
 	}
@@ -51,7 +51,13 @@ func (r CreateRequest) Handle() (interface{}, error) {
 }
 
 func (r ReadRequest) Handle() (interface{}, error) {
-	project, err := pg.Query().Projects().Get(r.ProjectId, r.Expanded)
+	var project rsrc.Resource
+	var err error
+	if r.Expanded {
+		project, err = pg.Query().Projects().GetExpanded(r.ProjectId)
+	} else {
+		project, err = pg.Query().Projects().Get(r.ProjectId)
+	}
 	return project, rsrc.MaybeNewNotFoundOrInternalError("cannot get project", err)
 }
 

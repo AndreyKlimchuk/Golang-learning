@@ -33,7 +33,7 @@ type DeleteRequest struct {
 }
 
 func (r CreateRequest) Handle() (interface{}, error) {
-	_, err := pg.Query().Tasks().Get(r.TaskId, false)
+	_, err := pg.Query().Tasks().Get(r.TaskId)
 	if err != nil {
 		return rsrc.Comment{}, rsrc.NewNotFoundOrInternalError("cannot get task", err)
 	}
