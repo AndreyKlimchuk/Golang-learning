@@ -3,12 +3,12 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"github.com/go-playground/validator/v10"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 
 	"github.com/AndreyKlimchuk/golang-learning/homework4/logger"
-
 	rsrc "github.com/AndreyKlimchuk/golang-learning/homework4/resources"
 	"github.com/go-chi/chi"
 	"go.uber.org/zap"
