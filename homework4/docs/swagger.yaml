@@ -1,0 +1,590 @@
+basePath: /api/v1
+definitions:
+  columns.UpdatePositionRequest:
+    properties:
+      afterColumnId:
+        type: string
+    type: object
+  resources.Column:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  resources.ColumnExpanded:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      tasks:
+        items:
+          $ref: '#/definitions/resources.TaskExpanded'
+        type: array
+    type: object
+  resources.ColumnSettableFields:
+    properties:
+      name:
+        type: string
+    type: object
+  resources.Comment:
+    properties:
+      id:
+        type: integer
+      text:
+        type: string
+    type: object
+  resources.CommentSettableFields:
+    properties:
+      text:
+        type: string
+    type: object
+  resources.Project:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  resources.ProjectExpanded:
+    properties:
+      columns:
+        items:
+          $ref: '#/definitions/resources.ColumnExpanded'
+        type: array
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  resources.ProjectSettableFields:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+    type: object
+  resources.Task:
+    properties:
+      column_id:
+        type: integer
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      project_id:
+        type: integer
+    type: object
+  resources.TaskExpanded:
+    properties:
+      column_id:
+        type: integer
+      comments:
+        items:
+          $ref: '#/definitions/resources.Comment'
+        type: array
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      project_id:
+        type: integer
+    type: object
+  resources.TaskSettableFields:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+    type: object
+  tasks.UpdatePositionRequest:
+    properties:
+      after_task_id:
+        type: string
+      new_column_id:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: ua.challenger@gmail.com
+    name: Andrew
+  description: This is Trello-like task management application
+  license: {}
+  title: API
+  version: "1.0"
+paths:
+  /projects:
+    get:
+      description: Get all projects
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/resources.Project'
+            type: array
+      tags:
+      - projects
+    post:
+      consumes:
+      - application/json
+      description: Create new project with single "default" column
+      parameters:
+      - description: request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/resources.ProjectSettableFields'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          headers:
+            Location:
+              description: /project/1
+              type: string
+          schema:
+            $ref: '#/definitions/resources.ProjectExpanded'
+      tags:
+      - projects
+  /projects/{project_id}:
+    delete:
+      description: Delete project and all sub-resources
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: integer
+      responses:
+        "204": {}
+      tags:
+      - projects
+    get:
+      consumes:
+      - application/json
+      description: Get project
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: integer
+      - default: false
+        description: expand by sub-resources
+        in: query
+        name: expanded
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resources.ProjectExpanded'
+      tags:
+      - projects
+    put:
+      consumes:
+      - application/json
+      description: Update project
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: integer
+      - description: request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/resources.ProjectSettableFields'
+      responses:
+        "204": {}
+      tags:
+      - projects
+  /projects/{project_id}/columns:
+    get:
+      description: Get all columns within project
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/resources.Column'
+            type: array
+      tags:
+      - columns
+    post:
+      consumes:
+      - application/json
+      description: Create new column
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: integer
+      - description: request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/resources.ColumnSettableFields'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          headers:
+            Location:
+              description: /project/1/columns/1
+              type: string
+          schema:
+            $ref: '#/definitions/resources.Column'
+      tags:
+      - columns
+  /projects/{project_id}/columns/{column_id}:
+    delete:
+      description: Delete column and move all tasks to the neighbor
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: integer
+      - description: Column ID
+        in: path
+        name: column_id
+        required: true
+        type: integer
+      responses:
+        "204": {}
+      tags:
+      - columns
+    get:
+      description: Get column
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: integer
+      - description: Column ID
+        in: path
+        name: column_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resources.Column'
+      tags:
+      - columns
+    put:
+      consumes:
+      - application/json
+      description: Update column
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: integer
+      - description: Column ID
+        in: path
+        name: column_id
+        required: true
+        type: integer
+      - description: request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/resources.ColumnSettableFields'
+      responses:
+        "204": {}
+      tags:
+      - columns
+  /projects/{project_id}/columns/{column_id}/position:
+    put:
+      consumes:
+      - application/json
+      description: |-
+        Place column after column specified by after_column_id
+        if it is grater than 0, otherwise at the beginning
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: integer
+      - description: Column ID
+        in: path
+        name: column_id
+        required: true
+        type: integer
+      - description: request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/columns.UpdatePositionRequest'
+      responses:
+        "204": {}
+      tags:
+      - columns
+  /projects/{project_id}/columns/{column_id}/tasks:
+    post:
+      consumes:
+      - application/json
+      description: Create new task
+      parameters:
+      - description: Project ID
+        in: path
+        name: project_id
+        required: true
+        type: integer
+      - description: Column ID
+        in: path
+        name: column_id
+        required: true
+        type: integer
+      - description: request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/resources.TaskSettableFields'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          headers:
+            Location:
+              description: /tasks/1
+              type: string
+          schema:
+            $ref: '#/definitions/resources.Task'
+      tags:
+      - tasks
+  /tasks/{task_id}:
+    delete:
+      description: Delete task with all sub-resources
+      parameters:
+      - description: Task ID
+        in: path
+        name: task_id
+        required: true
+        type: integer
+      responses:
+        "204": {}
+      tags:
+      - tasks
+    get:
+      description: Get task
+      parameters:
+      - description: Task ID
+        in: path
+        name: task_id
+        required: true
+        type: integer
+      - default: false
+        description: expand by sub-resources
+        in: query
+        name: expanded
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resources.TaskExpanded'
+      tags:
+      - tasks
+    put:
+      consumes:
+      - application/json
+      description: Update task
+      parameters:
+      - description: Task ID
+        in: path
+        name: task_id
+        required: true
+        type: integer
+      - description: request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/resources.TaskSettableFields'
+      responses:
+        "204": {}
+      tags:
+      - tasks
+  /tasks/{task_id}/comments:
+    get:
+      description: Get all comments within task
+      parameters:
+      - description: Task ID
+        in: path
+        name: task_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/resources.Comment'
+            type: array
+      tags:
+      - comments
+    post:
+      consumes:
+      - application/json
+      description: Create new comment
+      parameters:
+      - description: Task ID
+        in: path
+        name: task_id
+        required: true
+        type: integer
+      - description: request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/resources.CommentSettableFields'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          headers:
+            Location:
+              description: /tasks/1/comments/1
+              type: string
+          schema:
+            $ref: '#/definitions/resources.Comment'
+      tags:
+      - comments
+  /tasks/{task_id}/comments/{comment_id}:
+    delete:
+      description: Delete comment
+      parameters:
+      - description: Task ID
+        in: path
+        name: task_id
+        required: true
+        type: integer
+      - description: Comment ID
+        in: path
+        name: comment_id
+        required: true
+        type: integer
+      responses:
+        "204": {}
+      tags:
+      - comments
+    get:
+      description: Get comment
+      parameters:
+      - description: Task ID
+        in: path
+        name: task_id
+        required: true
+        type: integer
+      - description: Comment ID
+        in: path
+        name: comment_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resources.Comment'
+      tags:
+      - comments
+    put:
+      consumes:
+      - application/json
+      description: Update comment
+      parameters:
+      - description: Task ID
+        in: path
+        name: task_id
+        required: true
+        type: integer
+      - description: Comment ID
+        in: path
+        name: comment_id
+        required: true
+        type: integer
+      - description: request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/resources.CommentSettableFields'
+      responses:
+        "204": {}
+      tags:
+      - comments
+  /tasks/{task_id}/position:
+    put:
+      consumes:
+      - application/json
+      description: |-
+        Place task after task specified by after_task_id
+        if it is grater than 0, otherwise at the top of specified by new_column_id column
+      parameters:
+      - description: Task ID
+        in: path
+        name: task_id
+        required: true
+        type: integer
+      - description: request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/tasks.UpdatePositionRequest'
+      responses:
+        "204": {}
+      tags:
+      - tasks
+swagger: "2.0"

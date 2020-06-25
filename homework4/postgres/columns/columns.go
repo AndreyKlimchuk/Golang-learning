@@ -11,10 +11,12 @@ func (q Query) GetAndBlockMaxRank(projectId rsrc.Id) (rsrc.Rank, error) {
 	return "", nil
 }
 
-func (q Query) Create(projectId rsrc.Id, name string, rank rsrc.Rank) (rsrc.Column, error) {
-	return rsrc.Column{
-		ColumnSettableFields: rsrc.ColumnSettableFields{
-			Name: name,
+func (q Query) Create(projectId rsrc.Id, name string, rank rsrc.Rank) (rsrc.ColumnExpanded, error) {
+	return rsrc.ColumnExpanded{
+		Column: rsrc.Column{
+			ColumnSettableFields: rsrc.ColumnSettableFields{
+				Name: name,
+			},
 		},
 	}, nil
 }
