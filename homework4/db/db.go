@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"github.com/jackc/pgx/v4"
 
 	"github.com/AndreyKlimchuk/golang-learning/homework4/logger"
 	"go.uber.org/zap"
