@@ -1,7 +1,7 @@
 package columns
 
 import (
-	pg "github.com/AndreyKlimchuk/golang-learning/homework4/postgres"
+	"github.com/AndreyKlimchuk/golang-learning/homework4/db"
 	rsrc "github.com/AndreyKlimchuk/golang-learning/homework4/resources"
 )
 
@@ -37,65 +37,65 @@ type DeleteRequest struct {
 }
 
 func (r CreateRequest) Handle() (interface{}, error) {
-	_, err := pg.Query().Columns().GetByName(r.ProjectId, r.Name)
+	_, err := db.Query().Columns().GetByName(r.ProjectId, r.Name)
 	if err == nil {
 		return rsrc.Column{}, rsrc.NewConflictError("column with same name exists in project")
-	} else if !pg.IsNoRowsError(err) {
+	} else if !db.IsNoRowsError(err) {
 		return rsrc.Column{}, rsrc.NewInternalError("cannot get column by name", err)
 	}
-	tx, err := pg.Begin()
+	tx, err := db.Begin()
 	if err != nil {
 		return rsrc.Column{}, rsrc.NewInternalError("cannot begin transaction", err)
 	}
-	defer pg.Rollback(tx)
-	maxRank, err := pg.QueryWithTX(tx).Columns().GetAndBlockMaxRank(r.ProjectId)
+	defer db.Rollback(tx)
+	maxRank, err := db.QueryWithTX(tx).Columns().GetAndBlockMaxRank(r.ProjectId)
 	if err != nil {
 		return rsrc.Column{}, rsrc.NewNotFoundOrInternalError("cannot get max rank", err)
 	}
 	maxRank = rsrc.CalculateRank(maxRank, "")
-	column, err := pg.QueryWithTX(tx).Columns().Create(r.ProjectId, r.Name, maxRank)
+	column, err := db.QueryWithTX(tx).Columns().Create(r.ProjectId, r.Name, maxRank)
 	if err != nil {
 		return rsrc.Column{}, rsrc.NewInternalError("cannot create column", err)
 	}
-	if err := pg.Commit(tx); err != nil {
+	if err := db.Commit(tx); err != nil {
 		return rsrc.Column{}, rsrc.NewInternalError("cannot commit transaction", err)
 	}
 	return column, nil
 }
 
 func (r ReadRequest) Handle() (interface{}, error) {
-	column, err := pg.Query().Columns().Get(r.ProjectId, r.ColumnId)
+	column, err := db.Query().Columns().Get(r.ProjectId, r.ColumnId)
 	return column, rsrc.MaybeNewNotFoundOrInternalError("cannot get column", err)
 }
 
 func (r ReadCollectionRequest) Handle() (interface{}, error) {
-	columns, err := pg.Query().Columns().GetMultiple(r.ProjectId)
+	columns, err := db.Query().Columns().GetMultiple(r.ProjectId)
 	return columns, rsrc.MaybeNewInternalError("cannot get columns", err)
 }
 
 func (r UpdateRequest) Handle() (interface{}, error) {
-	column, err := pg.Query().Columns().GetByName(r.ProjectId, r.Name)
+	column, err := db.Query().Columns().GetByName(r.ProjectId, r.Name)
 	if err == nil && column.Id == r.ColumnId {
 		return nil, rsrc.NewConflictError("column with specified name already exists in project")
-	} else if err != nil && !pg.IsNoRowsError(err) {
+	} else if err != nil && !db.IsNoRowsError(err) {
 		return nil, rsrc.NewInternalError("cannot get column by name", err)
 	}
-	err = pg.Query().Columns().Update(r.ProjectId, r.ColumnId, r.Name)
+	err = db.Query().Columns().Update(r.ProjectId, r.ColumnId, r.Name)
 	return nil, rsrc.MaybeNewNotFoundOrInternalError("cannot update column", err)
 }
 
 func (r DeleteRequest) Handle() (interface{}, error) {
-	tx, err := pg.Begin()
+	tx, err := db.Begin()
 	if err != nil {
 		return nil, rsrc.NewInternalError("cannot begin transaction", err)
 	}
-	defer pg.Rollback(tx)
-	rank, err := pg.QueryWithTX(tx).Columns().GetAndBlockRank(r.ProjectId, r.ColumnId)
+	defer db.Rollback(tx)
+	rank, err := db.QueryWithTX(tx).Columns().GetAndBlockRank(r.ProjectId, r.ColumnId)
 	if err != nil {
 		return nil, rsrc.NewNotFoundOrInternalError("cannot get column rank", err)
 	}
-	successorColumnId, err := pg.QueryWithTX(tx).Columns().GetAndBlockSuccessorColumnId(r.ProjectId, rank)
-	if pg.IsNoRowsError(err) {
+	successorColumnId, err := db.QueryWithTX(tx).Columns().GetAndBlockSuccessorColumnId(r.ProjectId, rank)
+	if db.IsNoRowsError(err) {
 		return nil, rsrc.NewConflictError("project must contains at least one column")
 	}
 	if err != nil {
@@ -104,29 +104,29 @@ func (r DeleteRequest) Handle() (interface{}, error) {
 	if err := moveTasks(tx, successorColumnId, r.ColumnId); err != nil {
 		return nil, err
 	}
-	if err := pg.QueryWithTX(tx).Columns().Delete(r.ColumnId); err != nil {
+	if err := db.QueryWithTX(tx).Columns().Delete(r.ColumnId); err != nil {
 		return nil, rsrc.NewInternalError("cannot delete column", err)
 	}
-	if err := pg.Commit(tx); err != nil {
+	if err := db.Commit(tx); err != nil {
 		return nil, rsrc.NewInternalError("cannot commit transaction", err)
 	}
 	return nil, nil
 }
 
-func moveTasks(tx pg.TX, dstColumnId rsrc.Id, srcColumnId rsrc.Id) error {
-	tasksIds, err := pg.QueryWithTX(tx).Tasks().GetAndBlockIdsByColumn(srcColumnId)
+func moveTasks(tx db.TX, dstColumnId rsrc.Id, srcColumnId rsrc.Id) error {
+	tasksIds, err := db.QueryWithTX(tx).Tasks().GetAndBlockIdsByColumn(srcColumnId)
 	if err != nil {
 		return rsrc.NewInternalError("cannot get successor column tasks ids", err)
 	}
-	maxRank, err := pg.QueryWithTX(tx).Tasks().GetAndBlockMaxRankByColumn(dstColumnId)
-	if pg.IsNoRowsError(err) {
+	maxRank, err := db.QueryWithTX(tx).Tasks().GetAndBlockMaxRankByColumn(dstColumnId)
+	if db.IsNoRowsError(err) {
 		maxRank = ""
 	} else if err != nil {
 		return rsrc.NewInternalError("cannot get max task rank", err)
 	}
 	for _, taskId := range tasksIds {
 		maxRank = rsrc.CalculateRank(maxRank, "")
-		if err := pg.QueryWithTX(tx).Tasks().UpdatePosition(taskId, dstColumnId, maxRank); err != nil {
+		if err := db.QueryWithTX(tx).Tasks().UpdatePosition(taskId, dstColumnId, maxRank); err != nil {
 			return rsrc.NewInternalError("cannot update task position", err)
 		}
 	}
@@ -134,33 +134,33 @@ func moveTasks(tx pg.TX, dstColumnId rsrc.Id, srcColumnId rsrc.Id) error {
 }
 
 func (r UpdatePositionRequest) Handle() (interface{}, error) {
-	tx, err := pg.Begin()
+	tx, err := db.Begin()
 	if err != nil {
 		return nil, rsrc.NewInternalError("cannot begin transaction", err)
 	}
-	defer pg.Rollback(tx)
+	defer db.Rollback(tx)
 	var prevRank rsrc.Rank = ""
 	if r.AfterColumnId > 0 {
-		prevRank, err = pg.QueryWithTX(tx).Columns().GetAndBlockRank(r.ProjectId, r.AfterColumnId)
-		if pg.IsNoRowsError(err) {
+		prevRank, err = db.QueryWithTX(tx).Columns().GetAndBlockRank(r.ProjectId, r.AfterColumnId)
+		if db.IsNoRowsError(err) {
 			return nil, rsrc.NewConflictError("column specified by after_column_id doesn't exists in project")
 		}
 		if err != nil {
 			return nil, rsrc.NewInternalError("cannot get column specified by after_column_id", err)
 		}
 	}
-	nextRank, err := pg.QueryWithTX(tx).Columns().GetNextRank(r.ProjectId, prevRank)
-	if pg.IsNoRowsError(err) {
+	nextRank, err := db.QueryWithTX(tx).Columns().GetNextRank(r.ProjectId, prevRank)
+	if db.IsNoRowsError(err) {
 		nextRank = ""
 	} else if err != nil {
 		return nil, rsrc.NewInternalError("cannot get next column rank", err)
 	}
 	newRank := rsrc.CalculateRank(prevRank, nextRank)
-	err = pg.QueryWithTX(tx).Columns().UpdateRank(r.ProjectId, r.ColumnId, newRank)
+	err = db.QueryWithTX(tx).Columns().UpdateRank(r.ProjectId, r.ColumnId, newRank)
 	if err != nil {
 		return nil, rsrc.NewNotFoundOrInternalError("cannot update column rank", err)
 	}
-	if err := pg.Commit(tx); err != nil {
+	if err := db.Commit(tx); err != nil {
 		return nil, rsrc.NewInternalError("cannot commit transaction", err)
 	}
 	return nil, nil

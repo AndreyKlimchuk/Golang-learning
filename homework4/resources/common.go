@@ -95,22 +95,22 @@ func (resource Comment) GetId() Id {
 }
 
 //func GenericUpdatePosition(r UpdatePositionRequest) error {
-//	tx, err := pg.Begin()
+//	tx, err := db.Begin()
 //	if err != nil {
 //		return rsrc.NewInternalError("cannot begin transaction", err)
 //	}
-//	defer pg.Rollback(tx)
+//	defer db.Rollback(tx)
 //	var prevRank rsrc.Rank = ""
 //	if r.AfterTargetId() > 0 {
 //		prevRank, err = r.GetAndBlockPrevRank(tx)
-//		if pg.IsNoRowsError(err) {
+//		if db.IsNoRowsError(err) {
 //			return rsrc.NewConflictError("after target doesn't exist")
 //		} else if err != nil {
 //			return rsrc.NewInternalError("cannot get previous task rank", err)
 //		}
 //	}
 //	nextRank, err := r.GetNextRank(tx, prevRank)
-//	if pg.IsNoRowsError(err) {
+//	if db.IsNoRowsError(err) {
 //		nextRank = ""
 //	} else if err != nil {
 //		return rsrc.NewInternalError("cannot get next task rank", err)
@@ -120,7 +120,7 @@ func (resource Comment) GetId() Id {
 //	if err != nil {
 //		return rsrc.NewNotFoundOrInternalError("cannot update position", err)
 //	}
-//	if err := pg.Commit(tx); err != nil {
+//	if err := db.Commit(tx); err != nil {
 //		return rsrc.NewInternalError("cannot commit transaction", err)
 //	}
 //}
