@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"github.com/AndreyKlimchuk/golang-learning/homework4/db"
+	"github.com/AndreyKlimchuk/golang-learning/homework4/db/common"
 	rsrc "github.com/AndreyKlimchuk/golang-learning/homework4/resources"
 )
 
@@ -89,14 +90,14 @@ func (r UpdatePositionRequest) Handle() (interface{}, error) {
 	var prevRank rsrc.Rank = ""
 	if r.AfterTaskId > 0 {
 		prevRank, err = db.QueryWithTX(tx).Tasks().GetAndBlockRank(r.NewColumnId, r.AfterTaskId)
-		if db.IsNoRowsError(err) {
+		if common.IsNoRowsError(err) {
 			return nil, rsrc.NewConflictError("task specified by after_task_id not found in target column")
 		} else if err != nil {
 			return nil, rsrc.NewInternalError("cannot get previous task rank", err)
 		}
 	}
 	nextRank, err := db.QueryWithTX(tx).Tasks().GetNextRank(r.NewColumnId, prevRank)
-	if db.IsNoRowsError(err) {
+	if common.IsNoRowsError(err) {
 		nextRank = ""
 	} else if err != nil {
 		return nil, rsrc.NewInternalError("cannot get next task rank", err)
@@ -118,7 +119,7 @@ func validatePositionUpdate(r UpdatePositionRequest) error {
 	}
 	if task.ColumnId != r.NewColumnId {
 		_, err := db.Query().Columns().Get(task.ProjectId, r.NewColumnId)
-		if db.IsNoRowsError(err) {
+		if common.IsNoRowsError(err) {
 			return rsrc.NewConflictError("column specified by new_column_id not found in target project")
 		} else if err != nil {
 			return rsrc.NewInternalError("cannot get new column", err)

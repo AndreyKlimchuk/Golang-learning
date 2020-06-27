@@ -43,11 +43,11 @@ func (r CreateRequest) Handle() (interface{}, error) {
 	if err != nil {
 		return rsrc.Project{}, rsrc.NewInternalError("cannot create column", err)
 	}
-	project.Columns = []rsrc.ColumnExpanded{column}
 	if err := db.Commit(tx); err != nil {
 		return rsrc.Project{}, rsrc.NewInternalError("cannot commit transaction", err)
 	}
-	return project, nil
+	projectExpanded := rsrc.ProjectExpanded{Project: project, Columns: []rsrc.ColumnExpanded{column}}
+	return projectExpanded, nil
 }
 
 func (r ReadRequest) Handle() (interface{}, error) {

@@ -2,6 +2,7 @@ package columns
 
 import (
 	"github.com/AndreyKlimchuk/golang-learning/homework4/db"
+	"github.com/AndreyKlimchuk/golang-learning/homework4/db/common"
 	rsrc "github.com/AndreyKlimchuk/golang-learning/homework4/resources"
 )
 
@@ -40,7 +41,7 @@ func (r CreateRequest) Handle() (interface{}, error) {
 	_, err := db.Query().Columns().GetByName(r.ProjectId, r.Name)
 	if err == nil {
 		return rsrc.Column{}, rsrc.NewConflictError("column with same name exists in project")
-	} else if !db.IsNoRowsError(err) {
+	} else if !common.IsNoRowsError(err) {
 		return rsrc.Column{}, rsrc.NewInternalError("cannot get column by name", err)
 	}
 	tx, err := db.Begin()
@@ -77,7 +78,7 @@ func (r UpdateRequest) Handle() (interface{}, error) {
 	column, err := db.Query().Columns().GetByName(r.ProjectId, r.Name)
 	if err == nil && column.Id == r.ColumnId {
 		return nil, rsrc.NewConflictError("column with specified name already exists in project")
-	} else if err != nil && !db.IsNoRowsError(err) {
+	} else if err != nil && !common.IsNoRowsError(err) {
 		return nil, rsrc.NewInternalError("cannot get column by name", err)
 	}
 	err = db.Query().Columns().Update(r.ProjectId, r.ColumnId, r.Name)
@@ -95,7 +96,7 @@ func (r DeleteRequest) Handle() (interface{}, error) {
 		return nil, rsrc.NewNotFoundOrInternalError("cannot get column rank", err)
 	}
 	successorColumnId, err := db.QueryWithTX(tx).Columns().GetAndBlockSuccessorColumnId(r.ProjectId, rank)
-	if db.IsNoRowsError(err) {
+	if common.IsNoRowsError(err) {
 		return nil, rsrc.NewConflictError("project must contains at least one column")
 	}
 	if err != nil {
@@ -119,7 +120,7 @@ func moveTasks(tx db.TX, dstColumnId rsrc.Id, srcColumnId rsrc.Id) error {
 		return rsrc.NewInternalError("cannot get successor column tasks ids", err)
 	}
 	maxRank, err := db.QueryWithTX(tx).Tasks().GetAndBlockMaxRankByColumn(dstColumnId)
-	if db.IsNoRowsError(err) {
+	if common.IsNoRowsError(err) {
 		maxRank = ""
 	} else if err != nil {
 		return rsrc.NewInternalError("cannot get max task rank", err)
@@ -142,7 +143,7 @@ func (r UpdatePositionRequest) Handle() (interface{}, error) {
 	var prevRank rsrc.Rank = ""
 	if r.AfterColumnId > 0 {
 		prevRank, err = db.QueryWithTX(tx).Columns().GetAndBlockRank(r.ProjectId, r.AfterColumnId)
-		if db.IsNoRowsError(err) {
+		if common.IsNoRowsError(err) {
 			return nil, rsrc.NewConflictError("column specified by after_column_id doesn't exists in project")
 		}
 		if err != nil {
@@ -150,7 +151,7 @@ func (r UpdatePositionRequest) Handle() (interface{}, error) {
 		}
 	}
 	nextRank, err := db.QueryWithTX(tx).Columns().GetNextRank(r.ProjectId, prevRank)
-	if db.IsNoRowsError(err) {
+	if common.IsNoRowsError(err) {
 		nextRank = ""
 	} else if err != nil {
 		return nil, rsrc.NewInternalError("cannot get next column rank", err)

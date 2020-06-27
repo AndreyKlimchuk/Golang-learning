@@ -25,7 +25,7 @@ type Column struct {
 
 type ColumnExpanded struct {
 	Column
-	Tasks []TaskExpanded `json:"tasks"`
+	Tasks []Task `json:"tasks"`
 }
 
 type ColumnSettableFields struct {
@@ -59,6 +59,7 @@ type CommentSettableFields struct {
 }
 
 type Request interface {
+	// If error is not nil, first value should be ignored
 	Handle() (interface{}, error)
 }
 

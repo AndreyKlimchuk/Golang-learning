@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"github.com/jackc/pgx/v4"
 
@@ -17,13 +16,11 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
-type queryerWrap struct {
-	q common.Queryer
-}
-
 type TX pgx.Tx
 
 var pool *pgxpool.Pool
+
+type queryerWrap common.QueryerWrap
 
 func Init(conn string) (err error) {
 	pool, err = pgxpool.Connect(context.Background(), conn)
@@ -34,27 +31,27 @@ func Init(conn string) (err error) {
 }
 
 func (w queryerWrap) Projects() projects.QueryerWrap {
-	return projects.QueryerWrap{Q: w.q}
+	return projects.QueryerWrap(w)
 }
 
 func (w queryerWrap) Columns() columns.QueryerWrap {
-	return columns.QueryerWrap{Q: w.q}
+	return columns.QueryerWrap(w)
 }
 
 func (w queryerWrap) Tasks() tasks.QueryerWrap {
-	return tasks.QueryerWrap{Q: w.q}
+	return tasks.QueryerWrap(w)
 }
 
 func (w queryerWrap) Comments() comments.QueryerWrap {
-	return comments.QueryerWrap{Q: w.q}
+	return comments.QueryerWrap(w)
 }
 
 func QueryWithTX(tx TX) queryerWrap {
-	return queryerWrap{q: tx}
+	return queryerWrap{Q: tx}
 }
 
 func Query() queryerWrap {
-	return queryerWrap{q: pool}
+	return queryerWrap{Q: pool}
 }
 
 func Begin() (TX, error) {
@@ -66,11 +63,7 @@ func Commit(tx TX) error {
 }
 
 func Rollback(tx TX) {
-	if err := tx.Rollback(context.Background()); err != nil {
+	if err := tx.Rollback(context.Background()); err != nil && !errors.Is(err, pgx.ErrTxClosed) {
 		logger.Zap.Error("error while rollback db transaction", zap.Error(err))
 	}
-}
-
-func IsNoRowsError(err error) bool {
-	return errors.Is(err, sql.ErrNoRows)
 }
