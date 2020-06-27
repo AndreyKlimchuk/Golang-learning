@@ -1,9 +1,8 @@
 package resources
 
 import (
-	"database/sql"
-	"errors"
 	"fmt"
+	dbCommot "github.com/AndreyKlimchuk/golang-learning/homework4/db/common"
 )
 
 type ErrorType int
@@ -59,7 +58,7 @@ func MaybeNewNotFoundOrInternalError(description string, err error) error {
 }
 
 func NewNotFoundOrInternalError(description string, err error) error {
-	if errors.Is(err, sql.ErrNoRows) {
+	if dbCommot.IsNoRowsError(err) {
 		return NewNotFountError()
 	} else {
 		return NewInternalError(description, err)
