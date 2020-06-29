@@ -13,8 +13,7 @@ func main() {
 	if err := logger.InitZap(); err != nil {
 		log.Fatalf("can't initialize zap logger: %v", err)
 	}
-	conn := "user=gorello password=12345 host=localhost port=5432 dbname=gorello pool_max_conns=10"
-	if err := db.Init(conn); err != nil {
+	if err := db.Init(); err != nil {
 		log.Fatalf("can't initialize db: %v", err)
 	}
 	defer func() {

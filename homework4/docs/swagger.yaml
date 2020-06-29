@@ -1,18 +1,18 @@
 basePath: /api/v1
 definitions:
-  columns.UpdatePositionRequest:
+  columns.UpdatePositionRequestBody:
     properties:
       afterColumnId:
-        type: string
+        type: integer
     type: object
-  resources.Column:
+  common.Column:
     properties:
       id:
         type: integer
       name:
         type: string
     type: object
-  resources.ColumnExpanded:
+  common.ColumnExpanded:
     properties:
       id:
         type: integer
@@ -20,27 +20,27 @@ definitions:
         type: string
       tasks:
         items:
-          $ref: '#/definitions/resources.TaskExpanded'
+          $ref: '#/definitions/common.Task'
         type: array
     type: object
-  resources.ColumnSettableFields:
+  common.ColumnSettableFields:
     properties:
       name:
         type: string
     type: object
-  resources.Comment:
+  common.Comment:
     properties:
       id:
         type: integer
       text:
         type: string
     type: object
-  resources.CommentSettableFields:
+  common.CommentSettableFields:
     properties:
       text:
         type: string
     type: object
-  resources.Project:
+  common.Project:
     properties:
       description:
         type: string
@@ -49,11 +49,11 @@ definitions:
       name:
         type: string
     type: object
-  resources.ProjectExpanded:
+  common.ProjectExpanded:
     properties:
       columns:
         items:
-          $ref: '#/definitions/resources.ColumnExpanded'
+          $ref: '#/definitions/common.ColumnExpanded'
         type: array
       description:
         type: string
@@ -62,14 +62,14 @@ definitions:
       name:
         type: string
     type: object
-  resources.ProjectSettableFields:
+  common.ProjectSettableFields:
     properties:
       description:
         type: string
       name:
         type: string
     type: object
-  resources.Task:
+  common.Task:
     properties:
       column_id:
         type: integer
@@ -82,13 +82,13 @@ definitions:
       project_id:
         type: integer
     type: object
-  resources.TaskExpanded:
+  common.TaskExpanded:
     properties:
       column_id:
         type: integer
       comments:
         items:
-          $ref: '#/definitions/resources.Comment'
+          $ref: '#/definitions/common.Comment'
         type: array
       description:
         type: string
@@ -99,19 +99,19 @@ definitions:
       project_id:
         type: integer
     type: object
-  resources.TaskSettableFields:
+  common.TaskSettableFields:
     properties:
       description:
         type: string
       name:
         type: string
     type: object
-  tasks.UpdatePositionRequest:
+  tasks.UpdatePositionRequestBody:
     properties:
       after_task_id:
-        type: string
+        type: integer
       new_column_id:
-        type: string
+        type: integer
     type: object
 host: localhost:8080
 info:
@@ -133,8 +133,9 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/resources.Project'
+              $ref: '#/definitions/common.Project'
             type: array
+      summary: Get projects
       tags:
       - projects
     post:
@@ -147,7 +148,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/resources.ProjectSettableFields'
+          $ref: '#/definitions/common.ProjectSettableFields'
       produces:
       - application/json
       responses:
@@ -158,7 +159,8 @@ paths:
               description: /project/1
               type: string
           schema:
-            $ref: '#/definitions/resources.ProjectExpanded'
+            $ref: '#/definitions/common.ProjectExpanded'
+      summary: Create project
       tags:
       - projects
   /projects/{project_id}:
@@ -172,6 +174,7 @@ paths:
         type: integer
       responses:
         "204": {}
+      summary: Delete project
       tags:
       - projects
     get:
@@ -195,7 +198,8 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/resources.ProjectExpanded'
+            $ref: '#/definitions/common.ProjectExpanded'
+      summary: Get project
       tags:
       - projects
     put:
@@ -213,9 +217,10 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/resources.ProjectSettableFields'
+          $ref: '#/definitions/common.ProjectSettableFields'
       responses:
         "204": {}
+      summary: Update project
       tags:
       - projects
   /projects/{project_id}/columns:
@@ -234,8 +239,9 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/resources.Column'
+              $ref: '#/definitions/common.Column'
             type: array
+      summary: Get columns
       tags:
       - columns
     post:
@@ -253,7 +259,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/resources.ColumnSettableFields'
+          $ref: '#/definitions/common.ColumnSettableFields'
       produces:
       - application/json
       responses:
@@ -264,7 +270,8 @@ paths:
               description: /project/1/columns/1
               type: string
           schema:
-            $ref: '#/definitions/resources.Column'
+            $ref: '#/definitions/common.Column'
+      summary: Create column
       tags:
       - columns
   /projects/{project_id}/columns/{column_id}:
@@ -283,6 +290,7 @@ paths:
         type: integer
       responses:
         "204": {}
+      summary: Delete column
       tags:
       - columns
     get:
@@ -304,7 +312,8 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/resources.Column'
+            $ref: '#/definitions/common.Column'
+      summary: Get column
       tags:
       - columns
     put:
@@ -327,9 +336,10 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/resources.ColumnSettableFields'
+          $ref: '#/definitions/common.ColumnSettableFields'
       responses:
         "204": {}
+      summary: Update column
       tags:
       - columns
   /projects/{project_id}/columns/{column_id}/position:
@@ -355,9 +365,10 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/columns.UpdatePositionRequest'
+          $ref: '#/definitions/columns.UpdatePositionRequestBody'
       responses:
         "204": {}
+      summary: Update column's position
       tags:
       - columns
   /projects/{project_id}/columns/{column_id}/tasks:
@@ -381,7 +392,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/resources.TaskSettableFields'
+          $ref: '#/definitions/common.TaskSettableFields'
       produces:
       - application/json
       responses:
@@ -392,7 +403,8 @@ paths:
               description: /tasks/1
               type: string
           schema:
-            $ref: '#/definitions/resources.Task'
+            $ref: '#/definitions/common.Task'
+      summary: Create task
       tags:
       - tasks
   /tasks/{task_id}:
@@ -406,6 +418,7 @@ paths:
         type: integer
       responses:
         "204": {}
+      summary: Delete task
       tags:
       - tasks
     get:
@@ -427,7 +440,8 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/resources.TaskExpanded'
+            $ref: '#/definitions/common.TaskExpanded'
+      summary: Get task
       tags:
       - tasks
     put:
@@ -445,9 +459,10 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/resources.TaskSettableFields'
+          $ref: '#/definitions/common.TaskSettableFields'
       responses:
         "204": {}
+      summary: Update task
       tags:
       - tasks
   /tasks/{task_id}/comments:
@@ -466,8 +481,9 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/resources.Comment'
+              $ref: '#/definitions/common.Comment'
             type: array
+      summary: Get comments
       tags:
       - comments
     post:
@@ -485,7 +501,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/resources.CommentSettableFields'
+          $ref: '#/definitions/common.CommentSettableFields'
       produces:
       - application/json
       responses:
@@ -496,7 +512,8 @@ paths:
               description: /tasks/1/comments/1
               type: string
           schema:
-            $ref: '#/definitions/resources.Comment'
+            $ref: '#/definitions/common.Comment'
+      summary: Create comment
       tags:
       - comments
   /tasks/{task_id}/comments/{comment_id}:
@@ -515,6 +532,7 @@ paths:
         type: integer
       responses:
         "204": {}
+      summary: Delete comment
       tags:
       - comments
     get:
@@ -536,7 +554,8 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/resources.Comment'
+            $ref: '#/definitions/common.Comment'
+      summary: Get comment
       tags:
       - comments
     put:
@@ -559,9 +578,10 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/resources.CommentSettableFields'
+          $ref: '#/definitions/common.CommentSettableFields'
       responses:
         "204": {}
+      summary: Update comment
       tags:
       - comments
   /tasks/{task_id}/position:
@@ -582,9 +602,10 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/tasks.UpdatePositionRequest'
+          $ref: '#/definitions/tasks.UpdatePositionRequestBody'
       responses:
         "204": {}
+      summary: Update task's position
       tags:
       - tasks
 swagger: "2.0"

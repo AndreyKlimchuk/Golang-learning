@@ -3,79 +3,86 @@ package tasks
 import (
 	"github.com/AndreyKlimchuk/golang-learning/homework4/db"
 	"github.com/AndreyKlimchuk/golang-learning/homework4/db/common"
-	rsrc "github.com/AndreyKlimchuk/golang-learning/homework4/resources"
+	"github.com/AndreyKlimchuk/golang-learning/homework4/resources"
+	rcommon "github.com/AndreyKlimchuk/golang-learning/homework4/resources/common"
 )
 
 type CreateRequest struct {
-	ProjectId rsrc.Id
-	ColumnId  rsrc.Id
-	rsrc.TaskSettableFields
+	ProjectId rcommon.Id
+	ColumnId  rcommon.Id
+	rcommon.TaskSettableFields
 }
 
 type ReadRequest struct {
-	TaskId   rsrc.Id
+	TaskId   rcommon.Id
 	Expanded bool
 }
 
 type UpdateRequest struct {
-	TaskId rsrc.Id
-	rsrc.TaskSettableFields
+	TaskId rcommon.Id
+	rcommon.TaskSettableFields
 }
 
 type DeleteRequest struct {
-	TaskId rsrc.Id
+	TaskId rcommon.Id
 }
 
 type UpdatePositionRequest struct {
-	TaskId      rsrc.Id `swaggerignore:"true"`
-	NewColumnId rsrc.Id `json:"new_column_id"`
-	AfterTaskId rsrc.Id `json:"after_task_id"`
+	TaskId rcommon.Id `validate:"nefield=UpdatePositionRequestBody.AfterTaskId"`
+	UpdatePositionRequestBody
+}
+
+type UpdatePositionRequestBody struct {
+	NewColumnId rcommon.Id `json:"new_column_id" swaggertype:"primitive,integer"`
+	AfterTaskId rcommon.Id `json:"after_task_id" swaggertype:"primitive,integer"`
 }
 
 func (r CreateRequest) Handle() (interface{}, error) {
 	if _, err := db.Query().Columns().Get(r.ProjectId, r.ColumnId); err != nil {
-		return rsrc.Task{}, rsrc.NewNotFoundOrInternalError("cannot get column", err)
+		return rcommon.Task{}, rcommon.NewNotFoundOrInternalError("cannot get column", err)
 	}
 	tx, err := db.Begin()
 	defer db.Rollback(tx)
 	if err != nil {
-		return rsrc.Task{}, rsrc.NewInternalError("cannot begin transaction", err)
+		return rcommon.Task{}, rcommon.NewInternalError("cannot begin transaction", err)
 	}
 	defer db.Rollback(tx)
 	maxRank, err := db.QueryWithTX(tx).Tasks().GetAndBlockMaxRankByColumn(r.ColumnId)
-	if err != nil {
-		return rsrc.Task{}, rsrc.NewInternalError("cannot get max rank", err)
+	if common.IsNoRowsError(err) {
+		maxRank = ""
+	} else if err != nil {
+		return rcommon.Task{}, rcommon.NewInternalError("cannot get max rank", err)
 	}
-	maxRank = rsrc.CalculateRank(maxRank, "")
+	maxRank = rcommon.CalculateRankHigher(maxRank)
 	task, err := db.QueryWithTX(tx).Tasks().Create(r.ProjectId, r.ColumnId, r.Name, r.Description, maxRank)
 	if err != nil {
-		return task, rsrc.NewInternalError("cannot create task", err)
+		return task, rcommon.NewInternalError("cannot create task", err)
 	}
 	if err := db.Commit(tx); err != nil {
-		return rsrc.Task{}, rsrc.NewInternalError("cannot commit transaction", err)
+		return rcommon.Task{}, rcommon.NewInternalError("cannot commit transaction", err)
 	}
 	return task, nil
 }
 
 func (r ReadRequest) Handle() (interface{}, error) {
-	var task rsrc.Resource
+	var task resources.Resource
 	var err error
 	if r.Expanded {
 		task, err = db.Query().Tasks().GetExpanded(r.TaskId)
 	} else {
 		task, err = db.Query().Tasks().Get(r.TaskId)
 	}
-	return task, rsrc.MaybeNewNotFoundOrInternalError("cannot read task", err)
+	return task, rcommon.MaybeNewNotFoundOrInternalError("cannot read task", err)
 }
 
 func (r UpdateRequest) Handle() (interface{}, error) {
 	err := db.Query().Tasks().Update(r.TaskId, r.Name, r.Description)
-	return nil, rsrc.MaybeNewNotFoundOrInternalError("cannot update task", err)
+	return nil, rcommon.MaybeNewNotFoundOrInternalError("cannot update task", err)
 }
 
 func (r DeleteRequest) Handle() (interface{}, error) {
 	err := db.Query().Tasks().Delete(r.TaskId)
-	return nil, rsrc.MaybeNewNotFoundOrInternalError("cannot delete task", err)
+	return nil, rcommon.MaybeNewNotFoundOrInternalError("cannot delete task", err)
 }
 
 func (r UpdatePositionRequest) Handle() (interface{}, error) {
@@ -84,30 +91,32 @@ func (r UpdatePositionRequest) Handle() (interface{}, error) {
 	}
 	tx, err := db.Begin()
 	if err != nil {
-		return nil, rsrc.NewInternalError("cannot begin transaction", err)
+		return nil, rcommon.NewInternalError("cannot begin transaction", err)
 	}
 	defer db.Rollback(tx)
-	var prevRank rsrc.Rank = ""
+	var prevRank rcommon.Rank = ""
 	if r.AfterTaskId > 0 {
 		prevRank, err = db.QueryWithTX(tx).Tasks().GetAndBlockRank(r.NewColumnId, r.AfterTaskId)
 		if common.IsNoRowsError(err) {
-			return nil, rsrc.NewConflictError("task specified by after_task_id not found in target column")
+			return nil, rcommon.NewConflictError("task specified by after_task_id not found in target column")
 		} else if err != nil {
-			return nil, rsrc.NewInternalError("cannot get previous task rank", err)
+			return nil, rcommon.NewInternalError("cannot get previous task rank", err)
 		}
 	}
+	var newRank rcommon.Rank
 	nextRank, err := db.QueryWithTX(tx).Tasks().GetNextRank(r.NewColumnId, prevRank)
-	if common.IsNoRowsError(err) {
-		nextRank = ""
+	if err == nil {
+		newRank = rcommon.CalculateRankBetween(prevRank, nextRank)
+	} else if common.IsNoRowsError(err) {
+		newRank = rcommon.CalculateRankHigher(prevRank)
 	} else if err != nil {
-		return nil, rsrc.NewInternalError("cannot get next task rank", err)
+		return nil, rcommon.NewInternalError("cannot get next task rank", err)
 	}
-	newRank := rsrc.CalculateRank(prevRank, nextRank)
 	if err := db.QueryWithTX(tx).Tasks().UpdatePosition(r.TaskId, r.NewColumnId, newRank); err != nil {
-		return nil, rsrc.NewNotFoundOrInternalError("cannot update task position", err)
+		return nil, rcommon.NewNotFoundOrInternalError("cannot update task position", err)
 	}
 	if err := db.Commit(tx); err != nil {
-		return nil, rsrc.NewInternalError("cannot commit transaction", err)
+		return nil, rcommon.NewInternalError("cannot commit transaction", err)
 	}
 	return nil, nil
 }
@@ -115,14 +124,14 @@ func (r UpdatePositionRequest) Handle() (interface{}, error) {
 func validatePositionUpdate(r UpdatePositionRequest) error {
 	task, err := db.Query().Tasks().Get(r.TaskId)
 	if err != nil {
-		return rsrc.NewNotFoundOrInternalError("cannot get task", err)
+		return rcommon.NewNotFoundOrInternalError("cannot get task", err)
 	}
 	if task.ColumnId != r.NewColumnId {
 		_, err := db.Query().Columns().Get(task.ProjectId, r.NewColumnId)
 		if common.IsNoRowsError(err) {
-			return rsrc.NewConflictError("column specified by new_column_id not found in target project")
+			return rcommon.NewConflictError("column specified by new_column_id not found in target project")
 		} else if err != nil {
-			return rsrc.NewInternalError("cannot get new column", err)
+			return rcommon.NewInternalError("cannot get new column", err)
 		}
 	}
 	return nil

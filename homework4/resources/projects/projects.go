@@ -2,17 +2,16 @@ package projects
 
 import (
 	"github.com/AndreyKlimchuk/golang-learning/homework4/db"
-	rsrc "github.com/AndreyKlimchuk/golang-learning/homework4/resources"
+	"github.com/AndreyKlimchuk/golang-learning/homework4/resources"
+	"github.com/AndreyKlimchuk/golang-learning/homework4/resources/common"
 )
 
-const defaultColumnName string = "default"
-
 type CreateRequest struct {
-	rsrc.ProjectSettableFields
+	common.ProjectSettableFields
 }
 
 type ReadRequest struct {
-	ProjectId rsrc.Id
+	ProjectId common.Id
 	Expanded  bool
 }
 
@@ -20,58 +19,58 @@ type ReadCollectionRequest struct {
 }
 
 type UpdateRequest struct {
-	ProjectId rsrc.Id
-	rsrc.ProjectSettableFields
+	ProjectId common.Id
+	common.ProjectSettableFields
 }
 
 type DeleteRequest struct {
-	ProjectId rsrc.Id
+	ProjectId common.Id
 }
 
 func (r CreateRequest) Handle() (interface{}, error) {
 	tx, err := db.Begin()
 	if err != nil {
-		return rsrc.Project{}, rsrc.NewInternalError("cannot begin transaction", err)
+		return common.Project{}, common.NewInternalError("cannot begin transaction", err)
 	}
 	defer db.Rollback(tx)
 	project, err := db.QueryWithTX(tx).Projects().Create(r.Name, r.Description)
 	if err != nil {
-		return rsrc.Project{}, rsrc.NewInternalError("cannot create project", err)
+		return common.Project{}, common.NewInternalError("cannot create project", err)
 	}
-	rank := rsrc.CalculateRank("", "")
-	column, err := db.QueryWithTX(tx).Columns().Create(project.Id, defaultColumnName, rank)
+	rank := common.CalculateRankInitial()
+	column, err := db.QueryWithTX(tx).Columns().Create(project.Id, common.DefaultColumnName, rank)
 	if err != nil {
-		return rsrc.Project{}, rsrc.NewInternalError("cannot create column", err)
+		return common.Project{}, common.NewInternalError("cannot create column", err)
 	}
 	if err := db.Commit(tx); err != nil {
-		return rsrc.Project{}, rsrc.NewInternalError("cannot commit transaction", err)
+		return common.Project{}, common.NewInternalError("cannot commit transaction", err)
 	}
-	projectExpanded := rsrc.ProjectExpanded{Project: project, Columns: []rsrc.ColumnExpanded{column}}
+	projectExpanded := common.ProjectExpanded{Project: project, Columns: []common.ColumnExpanded{column}}
 	return projectExpanded, nil
 }
 
 func (r ReadRequest) Handle() (interface{}, error) {
-	var project rsrc.Resource
+	var project resources.Resource
 	var err error
 	if r.Expanded {
 		project, err = db.Query().Projects().GetExpanded(r.ProjectId)
 	} else {
 		project, err = db.Query().Projects().Get(r.ProjectId)
 	}
-	return project, rsrc.MaybeNewNotFoundOrInternalError("cannot get project", err)
+	return project, common.MaybeNewNotFoundOrInternalError("cannot get project", err)
 }
 
 func (_ ReadCollectionRequest) Handle() (interface{}, error) {
 	project, err := db.Query().Projects().GetMultiple()
-	return project, rsrc.MaybeNewInternalError("cannot get projects", err)
+	return project, common.MaybeNewInternalError("cannot get projects", err)
 }
 
 func (r UpdateRequest) Handle() (interface{}, error) {
 	err := db.Query().Projects().Update(r.ProjectId, r.Name, r.Description)
-	return nil, rsrc.MaybeNewNotFoundOrInternalError("cannot update project", err)
+	return nil, common.MaybeNewNotFoundOrInternalError("cannot update project", err)
 }
 
 func (r DeleteRequest) Handle() (interface{}, error) {
 	err := db.Query().Projects().Delete(r.ProjectId)
-	return nil, rsrc.MaybeNewNotFoundOrInternalError("cannot delete project", err)
+	return nil, common.MaybeNewNotFoundOrInternalError("cannot delete project", err)
 }

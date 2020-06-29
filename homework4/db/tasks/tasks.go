@@ -3,20 +3,21 @@ package tasks
 import (
 	"context"
 	"github.com/AndreyKlimchuk/golang-learning/homework4/db/common"
-	rsrc "github.com/AndreyKlimchuk/golang-learning/homework4/resources"
+	rcommon "github.com/AndreyKlimchuk/golang-learning/homework4/resources/common"
 	"github.com/jackc/pgx/v4"
 )
 
 type QueryerWrap common.QueryerWrap
 
-func (w QueryerWrap) GetAndBlockIdsByColumn(columnId rsrc.Id) (ids []rsrc.Id, err error) {
-	const q = `SELECT id FROM tasks WHERE column_id = $1 ORDER BY rank ASC`
+func (w QueryerWrap) GetAndBlockIdsByColumn(columnId rcommon.Id) ([]rcommon.Id, error) {
+	var ids = []rcommon.Id{}
+	const q = `SELECT id FROM tasks WHERE column_id = $1 ORDER BY rank ASC FOR UPDATE`
 	rows, err := w.Q.Query(context.Background(), q, columnId)
 	if err != nil {
 		return ids, err
 	}
 	defer rows.Close()
-	var id rsrc.Id
+	var id rcommon.Id
 	for rows.Next() {
 		err := rows.Scan(&id)
 		if err != nil {
@@ -27,7 +28,7 @@ func (w QueryerWrap) GetAndBlockIdsByColumn(columnId rsrc.Id) (ids []rsrc.Id, er
 	return ids, nil
 }
 
-func (w QueryerWrap) GetAndBlockMaxRankByColumn(columnId rsrc.Id) (rank rsrc.Rank, err error) {
+func (w QueryerWrap) GetAndBlockMaxRankByColumn(columnId rcommon.Id) (rank rcommon.Rank, err error) {
 	const q = `
 		SELECT rank FROM tasks
 		WHERE column_id = $1
@@ -38,57 +39,60 @@ func (w QueryerWrap) GetAndBlockMaxRankByColumn(columnId rsrc.Id) (rank rsrc.Ran
 	return rank, err
 }
 
-func (w QueryerWrap) UpdatePosition(taskId, columnId rsrc.Id, rank rsrc.Rank) error {
+func (w QueryerWrap) UpdatePosition(taskId, columnId rcommon.Id, rank rcommon.Rank) error {
 	const q = "UPDATE tasks SET column_id = $2, rank = $3 WHERE id = $1"
 	return common.ErrorIfNoAffectedRows(w.Q.Exec(context.Background(), q, taskId, columnId, rank))
 }
 
-func (w QueryerWrap) Get(taskId rsrc.Id) (rsrc.Task, error) {
-	t := rsrc.Task{Id: taskId}
+func (w QueryerWrap) Get(taskId rcommon.Id) (rcommon.Task, error) {
+	t := rcommon.Task{Id: taskId}
 	const q = `SELECT project_id, column_id, name, description FROM tasks WHERE id = $1`
 	err := w.Q.QueryRow(context.Background(), q, taskId).Scan(&t.ProjectId, &t.ColumnId, &t.Name, &t.Description)
 	return t, err
 }
 
-func (w QueryerWrap) GetExpanded(taskId rsrc.Id) (rsrc.TaskExpanded, error) {
+func (w QueryerWrap) GetExpanded(taskId rcommon.Id) (rcommon.TaskExpanded, error) {
 	const q = `
-		SELECT t.project_id, t.column_id, t.name, t.description, c.id, c.text
+		SELECT t.id, t.project_id, t.column_id, t.name, t.description, 
+			   COALESCE(c.id, 0), COALESCE(c.text, '')
 		FROM tasks t
-		JOIN comments c
-		WHERE id = $1
+		LEFT JOIN comments c ON c.task_id = t.id
+		WHERE t.id = $1
 		ORDER BY c.create_dt ASC
 	`
 	rows, err := w.Q.Query(context.Background(), q, taskId)
 	if err != nil {
-		return rsrc.TaskExpanded{}, err
+		return rcommon.TaskExpanded{}, err
 	}
 	defer rows.Close()
-	return buildExpanded(taskId, rows)
+	return buildExpanded(rows)
 }
 
-func buildExpanded(taskId rsrc.Id, rows pgx.Rows) (rsrc.TaskExpanded, error) {
-	t := rsrc.Task{Id: taskId}
-	c := rsrc.Comment{}
-	comments := []rsrc.Comment{}
+func buildExpanded(rows pgx.Rows) (rcommon.TaskExpanded, error) {
+	t := rcommon.Task{}
+	c := rcommon.Comment{}
+	comments := []rcommon.Comment{}
 	for rows.Next() {
-		err := rows.Scan(&t.ProjectId, t.ColumnId, t.Name, t.Description, c.Id, c.Text)
+		err := rows.Scan(&t.Id, &t.ProjectId, &t.ColumnId, &t.Name, &t.Description, &c.Id, &c.Text)
 		if err != nil {
-			return rsrc.TaskExpanded{}, err
+			return rcommon.TaskExpanded{}, err
 		}
-		comments = append(comments, c)
+		if c.Id != 0 {
+			comments = append(comments, c)
+		}
 	}
-	if len(comments) > 0 {
-		return rsrc.TaskExpanded{Task: t, Comments: comments}, nil
+	if t.Id != 0 {
+		return rcommon.TaskExpanded{Task: t, Comments: comments}, nil
 	} else {
-		return rsrc.TaskExpanded{}, common.ErrNoRows
+		return rcommon.TaskExpanded{}, common.ErrNoRows
 	}
 }
 
-func (w QueryerWrap) Create(projectId, columnId rsrc.Id, name string,
-	description string, rank rsrc.Rank) (rsrc.Task, error) {
-	t := rsrc.Task{
+func (w QueryerWrap) Create(projectId, columnId rcommon.Id, name string,
+	description string, rank rcommon.Rank) (rcommon.Task, error) {
+	t := rcommon.Task{
 		ProjectId: projectId, ColumnId: columnId,
-		TaskSettableFields: rsrc.TaskSettableFields{Name: name, Description: description},
+		TaskSettableFields: rcommon.TaskSettableFields{Name: name, Description: description},
 	}
 	const q = `
 		INSERT INTO tasks (project_id, column_id, name, description, rank) VALUES ($1, $2, $3, $4, $5)
@@ -98,16 +102,16 @@ func (w QueryerWrap) Create(projectId, columnId rsrc.Id, name string,
 	return t, err
 }
 
-func (w QueryerWrap) GetAndBlockRank(columnId, taskId rsrc.Id) (rank rsrc.Rank, err error) {
-	const q = `SELECT rank FROM tasks WHERE columnId = $1 AND taskId = $2 FOR UPDATE`
+func (w QueryerWrap) GetAndBlockRank(columnId, taskId rcommon.Id) (rank rcommon.Rank, err error) {
+	const q = `SELECT rank FROM tasks WHERE column_id = $1 AND id = $2 FOR UPDATE`
 	err = w.Q.QueryRow(context.Background(), q, columnId, taskId).Scan(&rank)
 	return rank, err
 }
 
-func (w QueryerWrap) GetNextRank(columnId rsrc.Id, rank rsrc.Rank) (nextRank rsrc.Rank, err error) {
+func (w QueryerWrap) GetNextRank(columnId rcommon.Id, rank rcommon.Rank) (nextRank rcommon.Rank, err error) {
 	const q = `
 		SELECT rank FROM tasks
-		WHERE columnId = $1 AND rank > $2
+		WHERE column_id = $1 AND rank > $2
 		ORDER BY rank
 		LIMIT 1
 	`
@@ -115,12 +119,12 @@ func (w QueryerWrap) GetNextRank(columnId rsrc.Id, rank rsrc.Rank) (nextRank rsr
 	return nextRank, err
 }
 
-func (w QueryerWrap) Update(taskId rsrc.Id, name string, description string) error {
+func (w QueryerWrap) Update(taskId rcommon.Id, name string, description string) error {
 	const q = "UPDATE tasks SET name = $2, description = $3 WHERE id = $1"
 	return common.ErrorIfNoAffectedRows(w.Q.Exec(context.Background(), q, taskId, name, description))
 }
 
-func (w QueryerWrap) Delete(taskId rsrc.Id) error {
+func (w QueryerWrap) Delete(taskId rcommon.Id) error {
 	const q = "DELETE FROM tasks WHERE id = $1"
 	return common.ErrorIfNoAffectedRows(w.Q.Exec(context.Background(), q, taskId))
 }

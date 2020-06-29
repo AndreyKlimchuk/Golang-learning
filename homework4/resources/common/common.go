@@ -1,7 +1,9 @@
-package resources
+package common
 
 type Id int
 type Rank string
+
+const DefaultColumnName string = "default"
 
 type Project struct {
 	Id Id `json:"id"`
@@ -58,15 +60,6 @@ type CommentSettableFields struct {
 	Text string `json:"text" validate:"min=1,max=5000"`
 }
 
-type Request interface {
-	// If error is not nil, first value should be ignored
-	Handle() (interface{}, error)
-}
-
-type Resource interface {
-	GetId() Id
-}
-
 func (resource Project) GetId() Id {
 	return resource.Id
 }
@@ -95,39 +88,16 @@ func (resource Comment) GetId() Id {
 	return resource.Id
 }
 
-//func GenericUpdatePosition(r UpdatePositionRequest) error {
-//	tx, err := db.Begin()
-//	if err != nil {
-//		return rsrc.NewInternalError("cannot begin transaction", err)
-//	}
-//	defer db.Rollback(tx)
-//	var prevRank rsrc.Rank = ""
-//	if r.AfterTargetId() > 0 {
-//		prevRank, err = r.GetAndBlockPrevRank(tx)
-//		if db.IsNoRowsError(err) {
-//			return rsrc.NewConflictError("after target doesn't exist")
-//		} else if err != nil {
-//			return rsrc.NewInternalError("cannot get previous task rank", err)
-//		}
-//	}
-//	nextRank, err := r.GetNextRank(tx, prevRank)
-//	if db.IsNoRowsError(err) {
-//		nextRank = ""
-//	} else if err != nil {
-//		return rsrc.NewInternalError("cannot get next task rank", err)
-//	}
-//	newRank := rsrc.CalculateRank(prevRank, nextRank)
-//	err = r.UpdatePositionFinal(tx, newRank)
-//	if err != nil {
-//		return rsrc.NewNotFoundOrInternalError("cannot update position", err)
-//	}
-//	if err := db.Commit(tx); err != nil {
-//		return rsrc.NewInternalError("cannot commit transaction", err)
-//	}
-//}
+func CalculateRankHigher(rank Rank) Rank {
+	return CalculateRankBetween(rank, "{{{{{{{{{{{{{{{{")
+}
+
+func CalculateRankInitial() Rank {
+	return CalculateRankBetween("", "")
+}
 
 // naive implementation of lexicographic ranking algorithm
-func CalculateRank(rankA Rank, rankB Rank) Rank {
+func CalculateRankBetween(rankA Rank, rankB Rank) Rank {
 	var smaller, bigger Rank
 	var upperBound byte
 	if rankA < rankB {
@@ -145,7 +115,7 @@ func CalculateRank(rankA Rank, rankB Rank) Rank {
 		if i < len(bigger) {
 			upperBound = bigger[i]
 		} else {
-			upperBound = 'z' + 1
+			upperBound = '{' // 'z' + 1
 		}
 		if upperBound > res[i]+1 {
 			res[i] += (upperBound - res[i]) / 2

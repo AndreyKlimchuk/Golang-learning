@@ -3,7 +3,10 @@ package db
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/jackc/pgx/v4"
+	"path/filepath"
+	"runtime"
 
 	"github.com/AndreyKlimchuk/golang-learning/homework4/logger"
 	"go.uber.org/zap"
@@ -13,21 +16,60 @@ import (
 	"github.com/AndreyKlimchuk/golang-learning/homework4/db/common"
 	"github.com/AndreyKlimchuk/golang-learning/homework4/db/projects"
 	"github.com/AndreyKlimchuk/golang-learning/homework4/db/tasks"
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 type TX pgx.Tx
 
-var pool *pgxpool.Pool
-
 type queryerWrap common.QueryerWrap
 
-func Init(conn string) (err error) {
-	pool, err = pgxpool.Connect(context.Background(), conn)
+const databaseURL = "postgres://gorello:12345@localhost:5432/gorello"
+
+//const migrationsSourceUrl = "/db/migrations"
+var pool *pgxpool.Pool
+
+func Init() (err error) {
+	if err := ApplyMigrationsUp(); err != nil {
+		return fmt.Errorf("cannot apply up migrations: %w", err)
+	}
+	pool, err = pgxpool.Connect(context.Background(), databaseURL+"?pool_max_conns=10")
+	if err != nil {
+		return fmt.Errorf("cannot connect pool: %w", err)
+	}
+	return nil
+}
+
+func ApplyMigrationsUp() error {
+	return doMigrations(func(migrations *migrate.Migrate) error {
+		return migrations.Up()
+	})
+}
+
+func ApplyMigrationsDown() error {
+	return doMigrations(func(migrations *migrate.Migrate) error {
+		return migrations.Down()
+	})
+}
+
+func doMigrations(do func(*migrate.Migrate) error) error {
+	packageDir := getPackageDir()
+	migrations, err := migrate.New("file://"+packageDir+"/migrations", databaseURL)
 	if err != nil {
 		return err
 	}
+	defer migrations.Close()
+	if err := do(migrations); err != nil && !errors.Is(err, migrate.ErrNoChange) {
+		return err
+	}
 	return nil
+}
+
+func getPackageDir() string {
+	_, b, _, _ := runtime.Caller(0)
+	return filepath.Dir(b)
 }
 
 func (w queryerWrap) Projects() projects.QueryerWrap {

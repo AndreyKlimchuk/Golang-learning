@@ -6,9 +6,9 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger"
 
 	_ "github.com/AndreyKlimchuk/golang-learning/homework4/docs"
-	_ "github.com/AndreyKlimchuk/golang-learning/homework4/resources"
 	"github.com/AndreyKlimchuk/golang-learning/homework4/resources/columns"
 	"github.com/AndreyKlimchuk/golang-learning/homework4/resources/comments"
+	_ "github.com/AndreyKlimchuk/golang-learning/homework4/resources/common"
 	"github.com/AndreyKlimchuk/golang-learning/homework4/resources/projects"
 	"github.com/AndreyKlimchuk/golang-learning/homework4/resources/tasks"
 	"github.com/go-chi/chi"
@@ -25,12 +25,14 @@ import (
 // @host localhost:8080
 // @BasePath /api/v1
 
+const basePath = "/api/v1"
+
 func NewRouter() *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(middleware.Recoverer)
 
-	r.Route("/api/v1", func(r chi.Router) {
+	r.Route(basePath, func(r chi.Router) {
 		r.Route("/projects", func(r chi.Router) {
 			r.Post("/", createProject)
 			r.Get("/", getProjects)
@@ -68,7 +70,7 @@ func NewRouter() *chi.Mux {
 					r.Post("/", createComment)
 					r.Get("/", getComments)
 
-					r.Route("/{commentId:[\\d]+}", func(r chi.Router) {
+					r.Route("/{commentID:[\\d]+}", func(r chi.Router) {
 						r.Get("/", getComment)
 						r.Put("/", updateComment)
 						r.Delete("/", deleteComment)
@@ -85,12 +87,13 @@ func NewRouter() *chi.Mux {
 }
 
 // createProject godoc
+// @Summary Create project
 // @Description Create new project with single "default" column
 // @Tags projects
 // @Accept  json
 // @Produce  json
-// @Param body body resources.ProjectSettableFields true "request body"
-// @Success 201 {object} resources.ProjectExpanded
+// @Param body body common.ProjectSettableFields true "request body"
+// @Success 201 {object} common.ProjectExpanded
 // @Header 201 {string} Location "/project/1"
 // @Router /projects [post]
 func createProject(w http.ResponseWriter, httpReq *http.Request) {
@@ -99,10 +102,11 @@ func createProject(w http.ResponseWriter, httpReq *http.Request) {
 }
 
 // getProjects godoc
+// @Summary Get projects
 // @Description Get all projects
 // @Tags projects
 // @Produce  json
-// @Success 200 {array} resources.Project{}
+// @Success 200 {array} common.Project{}
 // @Router /projects [get]
 func getProjects(w http.ResponseWriter, httpReq *http.Request) {
 	var req = projects.ReadCollectionRequest{}
@@ -110,13 +114,14 @@ func getProjects(w http.ResponseWriter, httpReq *http.Request) {
 }
 
 // getProject godoc
+// @Summary Get project
 // @Description Get project
 // @Tags projects
 // @Accept  json
 // @Produce  json
 // @Param project_id path int true "Project ID"
 // @Param expanded query bool false "expand by sub-resources" default(false)
-// @Success 200 {object} resources.ProjectExpanded
+// @Success 200 {object} common.ProjectExpanded
 // @Router /projects/{project_id} [get]
 func getProject(w http.ResponseWriter, httpReq *http.Request) {
 	var req = projects.ReadRequest{
@@ -127,11 +132,12 @@ func getProject(w http.ResponseWriter, httpReq *http.Request) {
 }
 
 // updateProject godoc
+// @Summary Update project
 // @Description Update project
 // @Tags projects
 // @Accept  json
 // @Param project_id path int true "Project ID"
-// @Param body body resources.ProjectSettableFields true "request body"
+// @Param body body common.ProjectSettableFields true "request body"
 // @Success 204
 // @Router /projects/{project_id} [put]
 func updateProject(w http.ResponseWriter, httpReq *http.Request) {
@@ -142,6 +148,7 @@ func updateProject(w http.ResponseWriter, httpReq *http.Request) {
 }
 
 // deleteProject godoc
+// @Summary Delete project
 // @Description Delete project and all sub-resources
 // @Tags projects
 // @Param project_id path int true "Project ID"
@@ -156,12 +163,13 @@ func deleteProject(w http.ResponseWriter, httpReq *http.Request) {
 
 // createColumn godoc
 // @Description Create new column
+// @Summary Create column
 // @Tags columns
 // @Accept  json
 // @Produce  json
 // @Param project_id path int true "Project ID"
-// @Param body body resources.ColumnSettableFields true "request body"
-// @Success 201 {object} resources.Column
+// @Param body body common.ColumnSettableFields true "request body"
+// @Success 201 {object} common.Column
 // @Header 201 {string} Location "/project/1/columns/1"
 // @Router /projects/{project_id}/columns [post]
 func createColumn(w http.ResponseWriter, httpReq *http.Request) {
@@ -172,11 +180,12 @@ func createColumn(w http.ResponseWriter, httpReq *http.Request) {
 }
 
 // getColumns godoc
+// @Summary Get columns
 // @Description Get all columns within project
 // @Tags columns
 // @Produce  json
 // @Param project_id path int true "Project ID"
-// @Success 200 {array} resources.Column{}
+// @Success 200 {array} common.Column{}
 // @Router /projects/{project_id}/columns [get]
 func getColumns(w http.ResponseWriter, httpReq *http.Request) {
 	var req = columns.ReadCollectionRequest{
@@ -186,12 +195,13 @@ func getColumns(w http.ResponseWriter, httpReq *http.Request) {
 }
 
 // getColumn godoc
+// @Summary Get column
 // @Description Get column
 // @Tags columns
 // @Produce  json
 // @Param project_id path int true "Project ID"
 // @Param column_id path int true "Column ID"
-// @Success 200 {object} resources.Column
+// @Success 200 {object} common.Column
 // @Router /projects/{project_id}/columns/{column_id} [get]
 func getColumn(w http.ResponseWriter, httpReq *http.Request) {
 	var req = columns.ReadRequest{
@@ -202,12 +212,13 @@ func getColumn(w http.ResponseWriter, httpReq *http.Request) {
 }
 
 // updateColumn godoc
+// @Summary Update column
 // @Description Update column
 // @Tags columns
 // @Accept  json
 // @Param project_id path int true "Project ID"
 // @Param column_id path int true "Column ID"
-// @Param body body resources.ColumnSettableFields true "request body"
+// @Param body body common.ColumnSettableFields true "request body"
 // @Success 204
 // @Router /projects/{project_id}/columns/{column_id} [put]
 func updateColumn(w http.ResponseWriter, httpReq *http.Request) {
@@ -219,13 +230,14 @@ func updateColumn(w http.ResponseWriter, httpReq *http.Request) {
 }
 
 // updateColumnPosition godoc
+// @Summary Update column's position
 // @Description Place column after column specified by after_column_id
 // @Description if it is grater than 0, otherwise at the beginning
 // @Tags columns
 // @Accept  json
 // @Param project_id path int true "Project ID"
 // @Param column_id path int true "Column ID"
-// @Param body body columns.UpdatePositionRequest true "request body"
+// @Param body body columns.UpdatePositionRequestBody true "request body"
 // @Success 204
 // @Router /projects/{project_id}/columns/{column_id}/position [put]
 func updateColumnPosition(w http.ResponseWriter, httpReq *http.Request) {
@@ -237,6 +249,7 @@ func updateColumnPosition(w http.ResponseWriter, httpReq *http.Request) {
 }
 
 // deleteColumn godoc
+// @Summary Delete column
 // @Description Delete column and move all tasks to the neighbor
 // @Tags columns
 // @Param project_id path int true "Project ID"
@@ -252,14 +265,15 @@ func deleteColumn(w http.ResponseWriter, httpReq *http.Request) {
 }
 
 // createTask godoc
+// @Summary Create task
 // @Description Create new task
 // @Tags tasks
 // @Accept  json
 // @Produce  json
 // @Param project_id path int true "Project ID"
 // @Param column_id path int true "Column ID"
-// @Param body body resources.TaskSettableFields true "request body"
-// @Success 201 {object} resources.Task
+// @Param body body common.TaskSettableFields true "request body"
+// @Success 201 {object} common.Task
 // @Header 201 {string} Location "/tasks/1"
 // @Router /projects/{project_id}/columns/{column_id}/tasks [post]
 func createTask(w http.ResponseWriter, httpReq *http.Request) {
@@ -271,12 +285,13 @@ func createTask(w http.ResponseWriter, httpReq *http.Request) {
 }
 
 // getTask godoc
+// @Summary Get task
 // @Description Get task
 // @Tags tasks
 // @Produce  json
 // @Param task_id path int true "Task ID"
 // @Param expanded query bool false "expand by sub-resources" default(false)
-// @Success 200 {object} resources.TaskExpanded
+// @Success 200 {object} common.TaskExpanded
 // @Router /tasks/{task_id} [get]
 func getTask(w http.ResponseWriter, httpReq *http.Request) {
 	var req = tasks.ReadRequest{
@@ -287,11 +302,12 @@ func getTask(w http.ResponseWriter, httpReq *http.Request) {
 }
 
 // updateTask godoc
+// @Summary Update task
 // @Description Update task
 // @Tags tasks
 // @Accept  json
 // @Param task_id path int true "Task ID"
-// @Param body body resources.TaskSettableFields true "request body"
+// @Param body body common.TaskSettableFields true "request body"
 // @Success 204
 // @Router /tasks/{task_id} [put]
 func updateTask(w http.ResponseWriter, httpReq *http.Request) {
@@ -302,12 +318,13 @@ func updateTask(w http.ResponseWriter, httpReq *http.Request) {
 }
 
 // updateTaskPosition godoc
+// @Summary Update task's position
 // @Description Place task after task specified by after_task_id
 // @Description if it is grater than 0, otherwise at the top of specified by new_column_id column
 // @Tags tasks
 // @Accept  json
 // @Param task_id path int true "Task ID"
-// @Param body body tasks.UpdatePositionRequest true "request body"
+// @Param body body tasks.UpdatePositionRequestBody true "request body"
 // @Success 204
 // @Router /tasks/{task_id}/position [put]
 func updateTaskPosition(w http.ResponseWriter, httpReq *http.Request) {
@@ -318,6 +335,7 @@ func updateTaskPosition(w http.ResponseWriter, httpReq *http.Request) {
 }
 
 // deleteTask godoc
+// @Summary Delete task
 // @Description Delete task with all sub-resources
 // @Tags tasks
 // @Param task_id path int true "Task ID"
@@ -331,13 +349,14 @@ func deleteTask(w http.ResponseWriter, httpReq *http.Request) {
 }
 
 // createComment godoc
+// @Summary Create comment
 // @Description Create new comment
 // @Tags comments
 // @Accept  json
 // @Produce  json
 // @Param task_id path int true "Task ID"
-// @Param body body resources.CommentSettableFields true "request body"
-// @Success 201 {object} resources.Comment
+// @Param body body common.CommentSettableFields true "request body"
+// @Success 201 {object} common.Comment
 // @Header 201 {string} Location "/tasks/1/comments/1"
 // @Router /tasks/{task_id}/comments [post]
 func createComment(w http.ResponseWriter, httpReq *http.Request) {
@@ -348,11 +367,12 @@ func createComment(w http.ResponseWriter, httpReq *http.Request) {
 }
 
 // getComments godoc
+// @Summary Get comments
 // @Description Get all comments within task
 // @Tags comments
 // @Produce  json
 // @Param task_id path int true "Task ID"
-// @Success 200 {array} resources.Comment{}
+// @Success 200 {array} common.Comment{}
 // @Router /tasks/{task_id}/comments [get]
 func getComments(w http.ResponseWriter, httpReq *http.Request) {
 	var req = comments.ReadCollectionRequest{
@@ -362,12 +382,13 @@ func getComments(w http.ResponseWriter, httpReq *http.Request) {
 }
 
 // getComment godoc
+// @Summary Get comment
 // @Description Get comment
 // @Tags comments
 // @Produce  json
 // @Param task_id path int true "Task ID"
 // @Param comment_id path int true "Comment ID"
-// @Success 200 {object} resources.Comment
+// @Success 200 {object} common.Comment
 // @Router /tasks/{task_id}/comments/{comment_id} [get]
 func getComment(w http.ResponseWriter, httpReq *http.Request) {
 	var req = comments.ReadRequest{
@@ -378,12 +399,13 @@ func getComment(w http.ResponseWriter, httpReq *http.Request) {
 }
 
 // updateComment godoc
+// @Summary Update comment
 // @Description Update comment
 // @Tags comments
 // @Accept  json
 // @Param task_id path int true "Task ID"
 // @Param comment_id path int true "Comment ID"
-// @Param body body resources.CommentSettableFields true "request body"
+// @Param body body common.CommentSettableFields true "request body"
 // @Success 204
 // @Router /tasks/{task_id}/comments/{comment_id} [put]
 func updateComment(w http.ResponseWriter, httpReq *http.Request) {
@@ -395,6 +417,7 @@ func updateComment(w http.ResponseWriter, httpReq *http.Request) {
 }
 
 // deleteComment godoc
+// @Summary Delete comment
 // @Description Delete comment
 // @Tags comments
 // @Param task_id path int true "Task ID"
