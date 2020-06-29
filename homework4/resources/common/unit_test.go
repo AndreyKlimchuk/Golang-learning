@@ -1,4 +1,4 @@
-package resources
+package common
 
 import (
 	"math/rand"
@@ -9,20 +9,20 @@ import (
 const letters = "abcdefghijklmnopqrstuvwxyz"
 
 func Test_CalculateRank(t *testing.T) {
-	if initRank := CalculateRank("", ""); !isValidRank(initRank) {
+	if initRank := CalculateRankBetween("", ""); !isValidRank(initRank) {
 		t.Errorf("Ivalid initial rank %v", initRank)
 	}
 	var smaller, bigger Rank
 	for i := 0; i < 100000; i++ {
 		a, b := randRanksPair()
-		rank := CalculateRank(a, b)
+		rank := CalculateRankBetween(a, b)
 		if a < b {
 			smaller, bigger = a, b
 		} else {
 			smaller, bigger = b, a
 		}
 		if !isValidRank(rank) || !(smaller < rank && rank < bigger) {
-			t.Errorf("CalculateRank(%v, %v) returned incorrect result %v", a, b, rank)
+			t.Errorf("CalculateRankBetween(%v, %v) returned incorrect result %v", a, b, rank)
 		}
 	}
 }

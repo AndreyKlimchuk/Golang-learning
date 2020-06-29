@@ -3,13 +3,14 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"github.com/AndreyKlimchuk/golang-learning/homework4/resources"
+	"github.com/AndreyKlimchuk/golang-learning/homework4/resources/common"
 	"github.com/go-playground/validator/v10"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 
 	"github.com/AndreyKlimchuk/golang-learning/homework4/logger"
-	rsrc "github.com/AndreyKlimchuk/golang-learning/homework4/resources"
 	"github.com/go-chi/chi"
 	"go.uber.org/zap"
 )
@@ -39,7 +40,7 @@ func handleRequest(w http.ResponseWriter, httpReq *http.Request, req interface{}
 		http.Error(w, formatValidationErrors(err), http.StatusUnprocessableEntity)
 		return
 	}
-	resp, err := req.(rsrc.Request).Handle()
+	resp, err := req.(resources.Request).Handle()
 	sendResponse(w, httpReq, resp, err)
 }
 
@@ -57,7 +58,7 @@ func sendResponse(w http.ResponseWriter, httpReq *http.Request, body interface{}
 	case "GET":
 		sendJSONResponse(w, http.StatusOK, body)
 	case "POST":
-		w.Header().Set("Location", getLocation(httpReq, body.(rsrc.Resource)))
+		w.Header().Set("Location", getLocation(httpReq, body.(resources.Resource)))
 		sendJSONResponse(w, http.StatusCreated, body)
 	case "PUT", "DELETE":
 		w.WriteHeader(http.StatusNoContent)
@@ -65,14 +66,14 @@ func sendResponse(w http.ResponseWriter, httpReq *http.Request, body interface{}
 }
 
 func sendError(w http.ResponseWriter, err error) {
-	var genError = rsrc.Error{}
+	var genError = common.Error{}
 	if yes := errors.As(err, &genError); yes {
 		switch genError.Type {
-		case rsrc.NotFound:
+		case common.NotFound:
 			http.Error(w, "not found", http.StatusNotFound)
-		case rsrc.Conflict:
+		case common.Conflict:
 			http.Error(w, genError.Description, http.StatusConflict)
-		case rsrc.InternalError:
+		case common.InternalError:
 			logger.Zap.Error("internal error", zap.Error(err))
 			httpServerError(w)
 		}
@@ -82,13 +83,13 @@ func sendError(w http.ResponseWriter, err error) {
 	}
 }
 
-func getLocation(httpReq *http.Request, resource rsrc.Resource) string {
+func getLocation(httpReq *http.Request, resource resources.Resource) string {
 	var location string
 	id := strconv.Itoa(int(resource.GetId()))
 	switch resource.(type) {
 	// task resource has different base path after creation
-	case rsrc.Task:
-		location = "/tasks/" + id
+	case common.Task:
+		location = basePath + "/tasks/" + id
 	default:
 		location = httpReq.URL.Path + "/" + id
 	}
@@ -113,18 +114,18 @@ func httpServerError(w http.ResponseWriter) {
 	http.Error(w, "server error", http.StatusInternalServerError)
 }
 
-func getId(r *http.Request, key string) rsrc.Id {
+func getId(r *http.Request, key string) common.Id {
 	id, _ := strconv.Atoi(chi.URLParam(r, key))
-	return rsrc.Id(id)
+	return common.Id(id)
 }
 
-func getProjectId(r *http.Request) rsrc.Id { return getId(r, "projectID") }
+func getProjectId(r *http.Request) common.Id { return getId(r, "projectID") }
 
-func getColumnId(r *http.Request) rsrc.Id { return getId(r, "columnID") }
+func getColumnId(r *http.Request) common.Id { return getId(r, "columnID") }
 
-func getTaskId(r *http.Request) rsrc.Id { return getId(r, "taskID") }
+func getTaskId(r *http.Request) common.Id { return getId(r, "taskID") }
 
-func getCommentId(r *http.Request) rsrc.Id { return getId(r, "commentID") }
+func getCommentId(r *http.Request) common.Id { return getId(r, "commentID") }
 
 func getExpanded(r *http.Request) bool {
 	query := r.URL.Query()

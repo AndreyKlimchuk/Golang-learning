@@ -37,13 +37,14 @@ var doc = `{
                 "tags": [
                     "projects"
                 ],
+                "summary": "Get projects",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/resources.Project"
+                                "$ref": "#/definitions/common.Project"
                             }
                         }
                     }
@@ -60,6 +61,7 @@ var doc = `{
                 "tags": [
                     "projects"
                 ],
+                "summary": "Create project",
                 "parameters": [
                     {
                         "description": "request body",
@@ -67,7 +69,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/resources.ProjectSettableFields"
+                            "$ref": "#/definitions/common.ProjectSettableFields"
                         }
                     }
                 ],
@@ -75,7 +77,7 @@ var doc = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/resources.ProjectExpanded"
+                            "$ref": "#/definitions/common.ProjectExpanded"
                         },
                         "headers": {
                             "Location": {
@@ -99,6 +101,7 @@ var doc = `{
                 "tags": [
                     "projects"
                 ],
+                "summary": "Get project",
                 "parameters": [
                     {
                         "type": "integer",
@@ -119,7 +122,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/resources.ProjectExpanded"
+                            "$ref": "#/definitions/common.ProjectExpanded"
                         }
                     }
                 }
@@ -132,6 +135,7 @@ var doc = `{
                 "tags": [
                     "projects"
                 ],
+                "summary": "Update project",
                 "parameters": [
                     {
                         "type": "integer",
@@ -146,7 +150,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/resources.ProjectSettableFields"
+                            "$ref": "#/definitions/common.ProjectSettableFields"
                         }
                     }
                 ],
@@ -159,6 +163,7 @@ var doc = `{
                 "tags": [
                     "projects"
                 ],
+                "summary": "Delete project",
                 "parameters": [
                     {
                         "type": "integer",
@@ -182,6 +187,7 @@ var doc = `{
                 "tags": [
                     "columns"
                 ],
+                "summary": "Get columns",
                 "parameters": [
                     {
                         "type": "integer",
@@ -197,7 +203,7 @@ var doc = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/resources.Column"
+                                "$ref": "#/definitions/common.Column"
                             }
                         }
                     }
@@ -214,6 +220,7 @@ var doc = `{
                 "tags": [
                     "columns"
                 ],
+                "summary": "Create column",
                 "parameters": [
                     {
                         "type": "integer",
@@ -228,7 +235,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/resources.ColumnSettableFields"
+                            "$ref": "#/definitions/common.ColumnSettableFields"
                         }
                     }
                 ],
@@ -236,7 +243,7 @@ var doc = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/resources.Column"
+                            "$ref": "#/definitions/common.Column"
                         },
                         "headers": {
                             "Location": {
@@ -257,6 +264,7 @@ var doc = `{
                 "tags": [
                     "columns"
                 ],
+                "summary": "Get column",
                 "parameters": [
                     {
                         "type": "integer",
@@ -277,7 +285,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/resources.Column"
+                            "$ref": "#/definitions/common.Column"
                         }
                     }
                 }
@@ -290,6 +298,7 @@ var doc = `{
                 "tags": [
                     "columns"
                 ],
+                "summary": "Update column",
                 "parameters": [
                     {
                         "type": "integer",
@@ -311,7 +320,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/resources.ColumnSettableFields"
+                            "$ref": "#/definitions/common.ColumnSettableFields"
                         }
                     }
                 ],
@@ -324,6 +333,7 @@ var doc = `{
                 "tags": [
                     "columns"
                 ],
+                "summary": "Delete column",
                 "parameters": [
                     {
                         "type": "integer",
@@ -354,6 +364,7 @@ var doc = `{
                 "tags": [
                     "columns"
                 ],
+                "summary": "Update column's position",
                 "parameters": [
                     {
                         "type": "integer",
@@ -375,7 +386,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/columns.UpdatePositionRequest"
+                            "$ref": "#/definitions/columns.UpdatePositionRequestBody"
                         }
                     }
                 ],
@@ -396,6 +407,7 @@ var doc = `{
                 "tags": [
                     "tasks"
                 ],
+                "summary": "Create task",
                 "parameters": [
                     {
                         "type": "integer",
@@ -417,7 +429,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/resources.TaskSettableFields"
+                            "$ref": "#/definitions/common.TaskSettableFields"
                         }
                     }
                 ],
@@ -425,7 +437,7 @@ var doc = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/resources.Task"
+                            "$ref": "#/definitions/common.Task"
                         },
                         "headers": {
                             "Location": {
@@ -446,6 +458,7 @@ var doc = `{
                 "tags": [
                     "tasks"
                 ],
+                "summary": "Get task",
                 "parameters": [
                     {
                         "type": "integer",
@@ -466,7 +479,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/resources.TaskExpanded"
+                            "$ref": "#/definitions/common.TaskExpanded"
                         }
                     }
                 }
@@ -479,6 +492,7 @@ var doc = `{
                 "tags": [
                     "tasks"
                 ],
+                "summary": "Update task",
                 "parameters": [
                     {
                         "type": "integer",
@@ -493,7 +507,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/resources.TaskSettableFields"
+                            "$ref": "#/definitions/common.TaskSettableFields"
                         }
                     }
                 ],
@@ -506,6 +520,7 @@ var doc = `{
                 "tags": [
                     "tasks"
                 ],
+                "summary": "Delete task",
                 "parameters": [
                     {
                         "type": "integer",
@@ -529,6 +544,7 @@ var doc = `{
                 "tags": [
                     "comments"
                 ],
+                "summary": "Get comments",
                 "parameters": [
                     {
                         "type": "integer",
@@ -544,7 +560,7 @@ var doc = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/resources.Comment"
+                                "$ref": "#/definitions/common.Comment"
                             }
                         }
                     }
@@ -561,6 +577,7 @@ var doc = `{
                 "tags": [
                     "comments"
                 ],
+                "summary": "Create comment",
                 "parameters": [
                     {
                         "type": "integer",
@@ -575,7 +592,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/resources.CommentSettableFields"
+                            "$ref": "#/definitions/common.CommentSettableFields"
                         }
                     }
                 ],
@@ -583,7 +600,7 @@ var doc = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/resources.Comment"
+                            "$ref": "#/definitions/common.Comment"
                         },
                         "headers": {
                             "Location": {
@@ -604,6 +621,7 @@ var doc = `{
                 "tags": [
                     "comments"
                 ],
+                "summary": "Get comment",
                 "parameters": [
                     {
                         "type": "integer",
@@ -624,7 +642,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/resources.Comment"
+                            "$ref": "#/definitions/common.Comment"
                         }
                     }
                 }
@@ -637,6 +655,7 @@ var doc = `{
                 "tags": [
                     "comments"
                 ],
+                "summary": "Update comment",
                 "parameters": [
                     {
                         "type": "integer",
@@ -658,7 +677,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/resources.CommentSettableFields"
+                            "$ref": "#/definitions/common.CommentSettableFields"
                         }
                     }
                 ],
@@ -671,6 +690,7 @@ var doc = `{
                 "tags": [
                     "comments"
                 ],
+                "summary": "Delete comment",
                 "parameters": [
                     {
                         "type": "integer",
@@ -701,6 +721,7 @@ var doc = `{
                 "tags": [
                     "tasks"
                 ],
+                "summary": "Update task's position",
                 "parameters": [
                     {
                         "type": "integer",
@@ -715,7 +736,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/tasks.UpdatePositionRequest"
+                            "$ref": "#/definitions/tasks.UpdatePositionRequestBody"
                         }
                     }
                 ],
@@ -726,15 +747,15 @@ var doc = `{
         }
     },
     "definitions": {
-        "columns.UpdatePositionRequest": {
+        "columns.UpdatePositionRequestBody": {
             "type": "object",
             "properties": {
                 "afterColumnId": {
-                    "type": "string"
+                    "type": "integer"
                 }
             }
         },
-        "resources.Column": {
+        "common.Column": {
             "type": "object",
             "properties": {
                 "id": {
@@ -745,7 +766,7 @@ var doc = `{
                 }
             }
         },
-        "resources.ColumnExpanded": {
+        "common.ColumnExpanded": {
             "type": "object",
             "properties": {
                 "id": {
@@ -757,12 +778,12 @@ var doc = `{
                 "tasks": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/resources.TaskExpanded"
+                        "$ref": "#/definitions/common.Task"
                     }
                 }
             }
         },
-        "resources.ColumnSettableFields": {
+        "common.ColumnSettableFields": {
             "type": "object",
             "properties": {
                 "name": {
@@ -770,7 +791,7 @@ var doc = `{
                 }
             }
         },
-        "resources.Comment": {
+        "common.Comment": {
             "type": "object",
             "properties": {
                 "id": {
@@ -781,7 +802,7 @@ var doc = `{
                 }
             }
         },
-        "resources.CommentSettableFields": {
+        "common.CommentSettableFields": {
             "type": "object",
             "properties": {
                 "text": {
@@ -789,7 +810,7 @@ var doc = `{
                 }
             }
         },
-        "resources.Project": {
+        "common.Project": {
             "type": "object",
             "properties": {
                 "description": {
@@ -803,13 +824,13 @@ var doc = `{
                 }
             }
         },
-        "resources.ProjectExpanded": {
+        "common.ProjectExpanded": {
             "type": "object",
             "properties": {
                 "columns": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/resources.ColumnExpanded"
+                        "$ref": "#/definitions/common.ColumnExpanded"
                     }
                 },
                 "description": {
@@ -823,7 +844,7 @@ var doc = `{
                 }
             }
         },
-        "resources.ProjectSettableFields": {
+        "common.ProjectSettableFields": {
             "type": "object",
             "properties": {
                 "description": {
@@ -834,7 +855,7 @@ var doc = `{
                 }
             }
         },
-        "resources.Task": {
+        "common.Task": {
             "type": "object",
             "properties": {
                 "column_id": {
@@ -854,7 +875,7 @@ var doc = `{
                 }
             }
         },
-        "resources.TaskExpanded": {
+        "common.TaskExpanded": {
             "type": "object",
             "properties": {
                 "column_id": {
@@ -863,7 +884,7 @@ var doc = `{
                 "comments": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/resources.Comment"
+                        "$ref": "#/definitions/common.Comment"
                     }
                 },
                 "description": {
@@ -880,7 +901,7 @@ var doc = `{
                 }
             }
         },
-        "resources.TaskSettableFields": {
+        "common.TaskSettableFields": {
             "type": "object",
             "properties": {
                 "description": {
@@ -891,14 +912,14 @@ var doc = `{
                 }
             }
         },
-        "tasks.UpdatePositionRequest": {
+        "tasks.UpdatePositionRequestBody": {
             "type": "object",
             "properties": {
                 "after_task_id": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "new_column_id": {
-                    "type": "string"
+                    "type": "integer"
                 }
             }
         }
