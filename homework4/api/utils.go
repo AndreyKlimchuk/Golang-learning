@@ -8,6 +8,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/AndreyKlimchuk/golang-learning/homework4/logger"
@@ -18,8 +19,12 @@ import (
 var validate = validator.New()
 
 func StartHttpServer() {
-	err := http.ListenAndServe(":8080", NewRouter())
+	err := http.ListenAndServe(":"+get_port(), NewRouter())
 	logger.Zap.Fatal("http server termination", zap.Error(err))
+}
+
+func get_port() string {
+	return os.Getenv("PORT")
 }
 
 func handleRequest(w http.ResponseWriter, httpReq *http.Request, req interface{}) {
@@ -89,7 +94,7 @@ func getLocation(httpReq *http.Request, resource resources.Resource) string {
 	switch resource.(type) {
 	// task resource has different base path after creation
 	case common.Task:
-		location = basePath + "/tasks/" + id
+		location = BasePath + "/tasks/" + id
 	default:
 		location = httpReq.URL.Path + "/" + id
 	}

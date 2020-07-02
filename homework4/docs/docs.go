@@ -938,11 +938,11 @@ type swaggerInfo struct {
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = swaggerInfo{
 	Version:     "1.0",
-	Host:        "localhost:8080",
+	Host:        "friendly-drake-69422.herokuapp.com",
 	BasePath:    "/api/v1",
 	Schemes:     []string{},
-	Title:       "API",
-	Description: "This is Trello-like task management application",
+	Title:       "Gorello API",
+	Description: "Gorello - best task management application",
 }
 
 type s struct{}

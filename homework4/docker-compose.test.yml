@@ -1,0 +1,29 @@
+version: '3'
+services:
+  test:
+    container_name: test
+    environment:
+      - DATABASE_URL=postgres://gorello:12345@test_db:5432/gorello?sslmode=disable
+    build:
+      context: .
+      dockerfile: ./Dockerfile.test
+    depends_on:
+      - test_db
+    networks:
+      - test
+
+  test_db:
+    image: postgres:latest
+    container_name: test_db
+    environment:
+      - POSTGRES_USER=gorello
+      - POSTGRES_PASSWORD=12345
+      - POSTGRES_DB=gorello
+      - DATABASE_HOST=postgres
+    networks:
+      - test
+
+networks:
+  test:
+    driver: bridge
+

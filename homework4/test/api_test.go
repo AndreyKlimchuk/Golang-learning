@@ -1,8 +1,9 @@
-package api
+package test
 
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/AndreyKlimchuk/golang-learning/homework4/api"
 	"github.com/AndreyKlimchuk/golang-learning/homework4/db"
 	"github.com/AndreyKlimchuk/golang-learning/homework4/logger"
 	"github.com/AndreyKlimchuk/golang-learning/homework4/resources/columns"
@@ -30,13 +31,10 @@ func TestMain(m *testing.M) {
 	if err := logger.InitZap(); err != nil {
 		log.Fatalf("can't initialize zap logger: %v", err)
 	}
-	if err := db.ApplyMigrationsDown(); err != nil {
-		log.Fatalf("can't apply down migrations: %v", err)
-	}
 	if err := db.Init(); err != nil {
 		log.Fatalf("can't initialize db: %v", err)
 	}
-	srv := httptest.NewServer(NewRouter())
+	srv := httptest.NewServer(api.NewRouter())
 	defer srv.Close()
 	client = srv.Client()
 	URL = srv.URL
@@ -343,7 +341,7 @@ func assertPost201(t *testing.T, path string, reqBody interface{}, wantResource 
 	if !prs {
 		t.Fatalf("201 response doesn't contain 'Location' header")
 	}
-	location := strings.TrimPrefix(locations[0], basePath)
+	location := strings.TrimPrefix(locations[0], api.BasePath)
 	assertGet200(t, location, wantResource)
 }
 
@@ -409,7 +407,7 @@ func sendRequest(t *testing.T, method, path string, body interface{}) *http.Resp
 		}
 		reqBody = bytes.NewBuffer(bodyBytes)
 	}
-	req, err := http.NewRequest(method, URL+basePath+path, reqBody)
+	req, err := http.NewRequest(method, URL+api.BasePath+path, reqBody)
 	if err != nil {
 		t.Fatalf("new request failed: %v", err)
 	}
