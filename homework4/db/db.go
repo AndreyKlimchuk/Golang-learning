@@ -27,9 +27,8 @@ type TX pgx.Tx
 
 type queryerWrap common.QueryerWrap
 
-var databaseURL string // = "postgres://gorello:12345@localhost:5432/gorello"
+var databaseURL string
 
-//const migrationsSourceUrl = "/db/migrations"
 var pool *pgxpool.Pool
 
 func Init() (err error) {

@@ -21,7 +21,6 @@ type Queryer interface {
 }
 
 func IsNoRowsError(err error) bool {
-	// TODO: check correctness
 	return errors.Is(err, ErrNoRows) || errors.Is(err, ErrNoAffectedRows)
 }
 
