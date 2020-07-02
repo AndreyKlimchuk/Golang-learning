@@ -113,14 +113,14 @@ definitions:
       new_column_id:
         type: integer
     type: object
-host: localhost:8080
+host: friendly-drake-69422.herokuapp.com
 info:
   contact:
     email: ua.challenger@gmail.com
     name: Andrew
-  description: This is Trello-like task management application
+  description: Gorello - best task management application
   license: {}
-  title: API
+  title: Gorello API
   version: "1.0"
 paths:
   /projects:

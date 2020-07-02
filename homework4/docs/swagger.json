@@ -1,8 +1,8 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "This is Trello-like task management application",
-        "title": "API",
+        "description": "Gorello - best task management application",
+        "title": "Gorello API",
         "contact": {
             "name": "Andrew",
             "email": "ua.challenger@gmail.com"
@@ -10,7 +10,7 @@
         "license": {},
         "version": "1.0"
     },
-    "host": "localhost:8080",
+    "host": "friendly-drake-69422.herokuapp.com",
     "basePath": "/api/v1",
     "paths": {
         "/projects": {

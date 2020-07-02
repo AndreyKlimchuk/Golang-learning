@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jackc/pgx/v4"
+	"os"
 	"path/filepath"
 	"runtime"
 
@@ -26,16 +27,17 @@ type TX pgx.Tx
 
 type queryerWrap common.QueryerWrap
 
-const databaseURL = "postgres://gorello:12345@localhost:5432/gorello"
+var databaseURL string // = "postgres://gorello:12345@localhost:5432/gorello"
 
 //const migrationsSourceUrl = "/db/migrations"
 var pool *pgxpool.Pool
 
 func Init() (err error) {
+	databaseURL = os.Getenv("DATABASE_URL")
 	if err := ApplyMigrationsUp(); err != nil {
 		return fmt.Errorf("cannot apply up migrations: %w", err)
 	}
-	pool, err = pgxpool.Connect(context.Background(), databaseURL+"?pool_max_conns=10")
+	pool, err = pgxpool.Connect(context.Background(), databaseURL)
 	if err != nil {
 		return fmt.Errorf("cannot connect pool: %w", err)
 	}

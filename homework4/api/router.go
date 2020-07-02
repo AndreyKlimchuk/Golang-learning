@@ -15,24 +15,24 @@ import (
 	"github.com/go-chi/chi/middleware"
 )
 
-// @title API
+// @title Gorello API
 // @version 1.0
-// @description This is Trello-like task management application
+// @description Gorello - best task management application
 
 // @contact.name Andrew
 // @contact.email ua.challenger@gmail.com
 
-// @host localhost:8080
+// @host friendly-drake-69422.herokuapp.com
 // @BasePath /api/v1
 
-const basePath = "/api/v1"
+const BasePath = "/api/v1"
 
 func NewRouter() *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(middleware.Recoverer)
 
-	r.Route(basePath, func(r chi.Router) {
+	r.Route(BasePath, func(r chi.Router) {
 		r.Route("/projects", func(r chi.Router) {
 			r.Post("/", createProject)
 			r.Get("/", getProjects)
@@ -80,8 +80,8 @@ func NewRouter() *chi.Mux {
 		})
 	})
 
-	r.Get("/swagger/*", httpSwagger.Handler(
-		httpSwagger.URL("http://localhost:8080/swagger/doc.json"),
+	r.Get("/*", httpSwagger.Handler(
+		httpSwagger.URL("doc.json"),
 	))
 	return r
 }

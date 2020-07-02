@@ -1,0 +1,36 @@
+version: '3'
+services:
+  web:
+    container_name: web
+    environment:
+      - DATABASE_URL=postgres://gorello:12345@db:5432/gorello?sslmode=disable
+      - PORT=8080
+    build: .
+    ports:
+      - 8080:8080
+    restart: on-failure
+    depends_on:
+      - db
+    networks:
+      - base
+
+  db:
+    image: postgres:latest
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=gorello
+      - POSTGRES_PASSWORD=12345
+      - POSTGRES_DB=gorello
+      - DATABASE_HOST=postgres
+    networks:
+      - base
+    volumes:
+      - db:/var/lib/postgresql/data
+
+volumes:
+  db:
+
+networks:
+  base:
+    driver: bridge
+
